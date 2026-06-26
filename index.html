@@ -1132,5 +1132,35 @@ border-color:transparent;
 
     })();
   </script>
+  <script>
+const words = [
+    "Science Education",
+    "Commerce Education",
+    "JEE Aspirants",
+    "NEET Aspirants",
+    "Board Toppers",
+    "Future Engineers",
+    "Future Doctors",
+    "Future Leaders"
+];
+
+let index = 0;
+const text = document.getElementById("changing-text");
+
+setInterval(() => {
+
+    text.style.opacity = "0";
+    text.style.transform = "translateY(-15px)";
+
+    setTimeout(() => {
+        index = (index + 1) % words.length;
+        text.textContent = words[index];
+
+        text.style.opacity = "1";
+        text.style.transform = "translateY(0)";
+    }, 300);
+
+}, 2500);
+  </script>
 </body>
   </html>
