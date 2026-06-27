@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fusion Coaching - Teacher Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root {
+      --primary: #0ea5e9; --primary-dark: #0284c7; --primary-light: #38bdf8;
+      --primary-gradient: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+      --success: #10b981; --danger: #ef4444; --gold: #f59e0b;
+      --bg: #f1f5f9; --bg-card: #ffffff; --sidebar: #0f172a;
+      --text: #0f172a; --text-secondary: #475569; --text-light: #94a3b8;
+      --border: #e2e8f0; --shadow: 0 4px 20px rgba(0,0,0,0.06);
+      --radius: 12px; --radius-lg: 20px;
+      --font: 'Inter', sans-serif; --font-heading: 'Poppins', 'Inter', sans-serif;
+    }
+    [data-theme="dark"] {
+      --bg: #0b1120; --bg-card: #1e293b; --sidebar: #020617;
+      --text: #f1f5f9; --text-secondary: #94a3b8; --text-light: #64748b;
+      --border: #1e293b; --shadow: 0 4px 20px rgba(0,0,0,0.4);
+      --primary: #38bdf8; --primary-dark: #0ea5e9;
+      --primary-gradient: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); overflow-x: hidden; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--text-light); border-radius: 3px; }
+
+    .dash-wrapper { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 250px; background: var(--sidebar); color: #fff; position: fixed;
+      top: 0; left: 0; height: 100vh; z-index: 100; display: flex;
+      flex-direction: column; transition: transform 0.3s;
+    }
+    .sidebar-brand { padding: 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 10px; }
+    .sidebar-brand h2 { font-family: var(--font-heading); font-size: 20px; font-weight: 700; }
+    .sidebar-brand span { font-size: 11px; opacity: 0.6; }
+    .sidebar-nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+    .sidebar-nav a {
+      display: flex; align-items: center; gap: 12px; padding: 10px 14px;
+      border-radius: 10px; color: rgba(255,255,255,0.7); font-size: 14px;
+      font-weight: 500; transition: all 0.3s; text-decoration: none;
+    }
+    .sidebar-nav a:hover, .sidebar-nav a.active { background: rgba(14,165,233,0.3); color: #fff; }
+    .sidebar-nav a i { width: 20px; text-align: center; }
+    .sidebar-footer { padding: 16px 12px; border-top: 1px solid rgba(255,255,255,0.08); }
+    .sidebar-footer a { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 10px; color: rgba(255,255,255,0.7); font-size: 14px; text-decoration: none; }
+    .sidebar-footer a:hover { background: rgba(239,68,68,0.2); color: var(--danger); }
+
+    .main-content { flex: 1; margin-left: 250px; padding: 24px; min-height: 100vh; }
+
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 24px; padding: 16px 24px; background: var(--bg-card);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+    }
+    .topbar-left { display: flex; align-items: center; gap: 16px; }
+    .topbar-left h1 { font-family: var(--font-heading); font-size: 20px; font-weight: 700; }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+    .topbar-right .user-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--primary-gradient); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 600; }
+    .hamburger { display: none; background: none; border: none; font-size: 22px; color: var(--text); cursor: pointer; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: var(--bg-card); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); text-align: center; }
+    .stat-card h3 { font-size: 28px; font-weight: 800; background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .stat-card p { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+
+    .section-card { background: var(--bg-card); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow); margin-bottom: 20px; }
+    .section-card h3 { font-size: 18px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+    .section-card h3 i { color: var(--primary); }
+
+    .table-container { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: var(--bg); font-size: 12px; font-weight: 600; padding: 12px 14px; text-align: left; color: var(--text-secondary); border-bottom: 1px solid var(--border); }
+    td { padding: 10px 14px; font-size: 14px; border-bottom: 1px solid var(--border); }
+    tr:hover { background: var(--bg); }
+
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+    .badge-success { background: rgba(16,185,129,0.1); color: var(--success); }
+    .badge-danger { background: rgba(239,68,68,0.1); color: var(--danger); }
+    .badge-warning { background: rgba(245,158,11,0.1); color: var(--gold); }
+    .badge-info { background: rgba(14,165,233,0.1); color: var(--primary); }
+
+    .dash-section { display: none; }
+    .dash-section.active { display: block; }
+
+    .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; }
+    .toast { padding: 12px 18px; border-radius: 10px; color: #fff; font-size: 14px; margin-bottom: 8px; animation: slideIn 0.3s; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+    .toast-success { background: var(--success); }
+    .toast-error { background: var(--danger); }
+    .toast-info { background: var(--primary); }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.3s; border: none; }
+    .btn-primary { background: var(--primary-gradient); color: #fff; }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(14,165,233,0.35); }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-outline { background: transparent; border: 2px solid var(--border); color: var(--text); }
+    .btn-sm { padding: 6px 14px; font-size: 12px; }
+
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%; padding: 10px 14px; border: 1.5px solid var(--border);
+      border-radius: 8px; background: var(--bg-card); color: var(--text); font-size: 14px; transition: border-color 0.3s;
+    }
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--primary); outline: none; }
+    .form-row { display: flex; gap: 14px; flex-wrap: wrap; }
+    .form-row .form-group { flex: 1; min-width: 180px; }
+
+    .att-radio-group { display: flex; gap: 8px; }
+    .att-radio-group label { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border: 1.5px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.3s; }
+    .att-radio-group input[type="radio"] { accent-color: var(--primary); }
+
+    @media(max-width: 1024px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main-content { margin-left: 0; }
+      .hamburger { display: block; }
+    }
+    @media(max-width: 768px) { .main-content { padding: 16px; } .stats-grid { grid-template-columns: 1fr 1fr; } }
+    @media(max-width: 480px) { .stats-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="dash-wrapper">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <i class="fas fa-chalkboard-teacher" style="font-size:24px;color:var(--primary-light);"></i>
+      <div><h2>Fusion</h2><span>Teacher Portal</span></div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="#" class="active" onclick="showSection('dashboard')"><i class="fas fa-home"></i> Dashboard</a>
+      <a href="#" onclick="showSection('attendance')"><i class="fas fa-calendar-check"></i> Mark Attendance</a>
+      <a href="#" onclick="showSection('marks')"><i class="fas fa-pen"></i> Enter Marks</a>
+      <a href="#" onclick="showSection('tests')"><i class="fas fa-file-alt"></i> Online Tests</a>
+      <a href="#" onclick="showSection('material')"><i class="fas fa-upload"></i> Upload Material</a>
+      <a href="#" onclick="showSection('homework')"><i class="fas fa-tasks"></i> Homework</a>
+      <a href="#" onclick="showSection('notices')"><i class="fas fa-bullhorn"></i> Notices</a>
+      <a href="#" onclick="showSection('doubts')"><i class="fas fa-question-circle"></i> Student Doubts</a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="#" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="hamburger" onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="fas fa-bars"></i></button>
+        <h1 id="pageTitle">Dashboard</h1>
+      </div>
+      <div class="topbar-right">
+        <button onclick="toggleTheme()" style="background:none;border:none;color:var(--text);font-size:18px;cursor:pointer;padding:8px;"><i class="fas fa-moon" id="themeIcon"></i></button>
+        <div class="user-avatar" id="teacherAvatar">T</div>
+        <span id="teacherName" style="font-weight:500;font-size:14px;">Teacher</span>
+      </div>
+    </div>
+
+    <!-- Dashboard Section -->
+    <div class="dash-section active" id="sec-dashboard">
+      <div class="stats-grid" id="dashStats">
+        <div class="stat-card"><h3 id="totalStudents">-</h3><p>Total Students</p></div>
+        <div class="stat-card"><h3 id="todayPresent">-</h3><p>Present Today</p></div>
+        <div class="stat-card"><h3 id="pendingDoubts">-</h3><p>Pending Doubts</p></div>
+        <div class="stat-card"><h3 id="upcomingTests">-</h3><p>Upcoming Tests</p></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+        <div class="section-card">
+          <h3><i class="fas fa-question-circle"></i> Recent Student Doubts</h3>
+          <div id="recentDoubts" style="font-size:14px;color:var(--text-secondary);">Loading...</div>
+        </div>
+        <div class="section-card">
+          <h3><i class="fas fa-calendar-alt"></i> Quick Actions</h3>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <button class="btn btn-primary" onclick="showSection('attendance')" style="justify-content:center;"><i class="fas fa-calendar-check"></i> Mark Today's Attendance</button>
+            <button class="btn btn-outline" onclick="showSection('marks')" style="justify-content:center;"><i class="fas fa-pen"></i> Enter Marks</button>
+            <button class="btn btn-outline" onclick="showSection('doubts')" style="justify-content:center;"><i class="fas fa-reply"></i> Answer Doubts</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Attendance Section -->
+    <div class="dash-section" id="sec-attendance">
+      <div class="section-card">
+        <h3><i class="fas fa-calendar-check"></i> Mark Attendance</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Class *</label>
+            <select id="attClass" onchange="loadStudentsForAttendance()">
+              <option value="">Select Class</option>
+              <option value="9">Class 9</option><option value="10">Class 10</option>
+              <option value="11">Class 11</option><option value="12">Class 12</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Section</label>
+            <select id="attSection" onchange="loadStudentsForAttendance()">
+              <option value="">All</option><option value="A">A</option><option value="B">B</option><option value="C">C</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Date</label>
+            <input type="date" id="attDate" value="">
+          </div>
+        </div>
+        <div id="attendanceTableContainer" style="display:none;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin:12px 0;">
+            <span id="attStudentCount" style="font-size:13px;color:var(--text-secondary);"></span>
+            <button class="btn btn-primary" onclick="submitAttendance()"><i class="fas fa-save"></i> Save Attendance</button>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead><tr><th>#</th><th>Roll</th><th>Student Name</th><th>Status</th></tr></thead>
+              <tbody id="attendanceTableBody"><tr><td colspan="4" style="text-align:center;padding:24px;">Select class to load students</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Marks Entry Section -->
+    <div class="dash-section" id="sec-marks">
+      <div class="section-card">
+        <h3><i class="fas fa-pen"></i> Enter Marks</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Exam *</label>
+            <select id="marksExam"><option value="">-- Select --</option></select>
+          </div>
+          <div class="form-group">
+            <label>Class *</label>
+            <select id="marksClass" onchange="loadStudentsForMarks()">
+              <option value="">Select</option><option value="9">9</option><option value="10">10</option>
+              <option value="11">11</option><option value="12">12</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Section</label>
+            <select id="marksSection"><option value="">All</option><option value="A">A</option><option value="B">B</option><option value="C">C</option></select>
+          </div>
+          <div class="form-group">
+            <label>Subject *</label>
+            <select id="marksSubject">
+              <option value="">Select</option>
+              <option>Physics</option><option>Chemistry</option><option>Mathematics</option>
+              <option>Biology</option><option>English</option><option>Accounts</option><option>Economics</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Max Marks</label>
+            <input type="number" id="marksMax" value="100">
+          </div>
+          <div class="form-group" style="display:flex;align-items:flex-end;">
+            <button class="btn btn-primary" onclick="loadStudentsForMarks()"><i class="fas fa-search"></i> Load</button>
+          </div>
+        </div>
+        <div id="marksEntryContainer" style="display:none;">
+          <div style="display:flex;justify-content:space-between;margin:12px 0;">
+            <span id="marksStudentCount"></span>
+            <button class="btn btn-success" onclick="saveMarks()"><i class="fas fa-save"></i> Save All Marks</button>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead><tr><th>Roll</th><th>Student</th><th>Marks</th><th>Grade</th></tr></thead>
+              <tbody id="marksEntryBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Online Tests Section -->
+    <div class="dash-section" id="sec-tests">
+      <div class="section-card">
+        <h3><i class="fas fa-file-alt"></i> Create Online Test</h3>
+        <form id="createTestForm">
+          <div class="form-row">
+            <div class="form-group"><label>Test Title *</label><input type="text" id="testTitle" required></div>
+            <div class="form-group"><label>Subject *</label>
+              <select id="testSubject" required>
+                <option value="">Select</option><option>Physics</option><option>Chemistry</option><option>Mathematics</option>
+                <option>Biology</option><option>English</option><option>Accounts</option><option>Economics</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Class *</label><select id="testClass"><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option></select></div>
+            <div class="form-group"><label>Duration (min)</label><input type="number" id="testDuration" value="60"></div>
+            <div class="form-group"><label>Total Marks</label><input type="number" id="testMarks" value="100"></div>
+            <div class="form-group"><label>Negative Marking</label><input type="number" id="testNegative" value="0" step="0.25"></div>
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea id="testDescription" rows="3"></textarea>
+          </div>
+          <div style="display:flex;gap:12px;">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Create Test</button>
+            <button type="button" class="btn btn-outline" onclick="showSection('tests-questions')" id="addQuestionsBtn" style="display:none;"><i class="fas fa-list"></i> Add Questions</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Upload Material Section -->
+    <div class="dash-section" id="sec-material">
+      <div class="section-card">
+        <h3><i class="fas fa-upload"></i> Upload Study Material</h3>
+        <form id="uploadForm">
+          <div class="form-row">
+            <div class="form-group"><label>Title *</label><input type="text" id="matTitle" required></div>
+            <div class="form-group"><label>Subject</label>
+              <select id="matSubject">
+                <option value="">Select</option><option>Physics</option><option>Chemistry</option><option>Mathematics</option>
+                <option>Biology</option><option>English</option><option>Accounts</option><option>Economics</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Class</label><select id="matClass"><option value="">All</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option></select></div>
+            <div class="form-group"><label>Allow Download</label><select id="matDownload"><option value="false">No</option><option value="true">Yes</option></select></div>
+          </div>
+          <div class="form-group"><label>Description</label><textarea id="matDescription" rows="2"></textarea></div>
+          <div class="form-group"><label>File *</label><input type="file" id="matFile" required></div>
+          <button type="submit" class="btn btn-primary"><i class="fas fa-upload"></i> Upload</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Homework Section -->
+    <div class="dash-section" id="sec-homework">
+      <div class="section-card">
+        <h3><i class="fas fa-tasks"></i> Assign Homework</h3>
+        <form id="homeworkForm">
+          <div class="form-row">
+            <div class="form-group"><label>Title *</label><input type="text" id="hwTitle" required></div>
+            <div class="form-group"><label>Subject *</label>
+              <select id="hwSubject" required>
+                <option value="">Select</option><option>Physics</option><option>Chemistry</option><option>Mathematics</option>
+                <option>Biology</option><option>English</option><option>Accounts</option><option>Economics</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Class *</label><select id="hwClass"><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option></select></div>
+            <div class="form-group"><label>Section</label><select id="hwSection"><option value="">All</option><option value="A">A</option><option value="B">B</option></select></div>
+            <div class="form-group"><label>Due Date *</label><input type="date" id="hwDue" required></div>
+          </div>
+          <div class="form-group"><label>Description</label><textarea id="hwDesc" rows="3"></textarea></div>
+          <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Assign Homework</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Notices Section -->
+    <div class="dash-section" id="sec-notices">
+      <div class="section-card">
+        <h3><i class="fas fa-bullhorn"></i> Create Notice</h3>
+        <form id="noticeForm">
+          <div class="form-group"><label>Title *</label><input type="text" id="notTitle" required></div>
+          <div class="form-row">
+            <div class="form-group"><label>Target</label>
+              <select id="notTarget">
+                <option value="all">Everyone</option>
+                <option value="class">Specific Class</option>
+                <option value="section">Specific Section</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Class</label><select id="notClass"><option value="">All</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option></select></div>
+          </div>
+          <div class="form-group"><label>Content *</label><textarea id="notContent" rows="4" required></textarea></div>
+          <button type="submit" class="btn btn-primary"><i class="fas fa-bullhorn"></i> Publish Notice</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Doubts Section -->
+    <div class="dash-section" id="sec-doubts">
+      <div class="section-card">
+        <h3><i class="fas fa-question-circle"></i> Student Doubts</h3>
+        <div id="teacherDoubtsList">Loading...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const token = localStorage.getItem('fusion_token');
+const user = JSON.parse(localStorage.getItem('fusion_user') || '{}');
+if (!token || !['teacher', 'admin'].includes(user.role)) { window.location.href = '/'; }
+
+function showToast(msg, type = 'info') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast toast-' + type;
+  t.innerHTML = '<i class="fas fa-' + (type === 'success' ? 'check-circle' : type === 'error' ? 'times-circle' : 'info-circle') + '"></i> ' + msg;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(100%)'; setTimeout(() => t.remove(), 300); }, 3000);
+}
+
+function showSection(name) {
+  document.querySelectorAll('.dash-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+  const sec = document.getElementById('sec-' + name);
+  if (sec) sec.classList.add('active');
+  document.querySelector(`.sidebar-nav a[onclick*="'${name}'"]`)?.classList.add('active');
+  document.getElementById('pageTitle').textContent = name.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  if (window.innerWidth <= 1024) document.getElementById('sidebar').classList.remove('open');
+  
+  if (name === 'dashboard') loadTeacherDashboard();
+  if (name === 'attendance') { setDefaultDate(); }
+  if (name === 'marks') loadExamsDropdown();
+  if (name === 'doubts') loadTeacherDoubts();
+}
+
+function setDefaultDate() {
+  document.getElementById('attDate').value = new Date().toISOString().split('T')[0];
+}
+
+async function loadTeacherDashboard() {
+  try {
+    const res = await fetch('/api/teachers/dashboard', { headers: { 'Authorization': 'Bearer ' + token } });
+    const data = await res.json();
+    document.getElementById('totalStudents').textContent = data.studentsCount || 0;
+    document.getElementById('todayPresent').textContent = data.todayAttendance || 0;
+    document.getElementById('pendingDoubts').textContent = data.pendingDoubts || 0;
+    document.getElementById('upcomingTests').textContent = data.upcomingTests?.length || 0;
+    
+    const doubtsEl = document.getElementById('recentDoubts');
+    if (data.pendingDoubts > 0) {
+      doubtsEl.innerHTML = `<p>${data.pendingDoubts} doubts pending your attention. <a href="#" onclick="showSection('doubts');return false;" style="color:var(--primary);">View now</a></p>`;
+    } else {
+      doubtsEl.innerHTML = '<p>No pending doubts. Great job!</p>';
+    }
+  } catch (err) { showToast('Failed to load', 'error'); }
+}
+
+// ===== ATTENDANCE =====
+async function loadStudentsForAttendance() {
+  const cls = document.getElementById('attClass').value;
+  const section = document.getElementById('attSection').value;
+  if (!cls) { document.getElementById('attendanceTableContainer').style.display = 'none'; return; }
+  try {
+    const res = await fetch(`/api/admin/students?class=${cls}&section=${section}&limit=200`, { headers: { 'Authorization': 'Bearer ' + token } });
+    const data = await res.json();
+    const tbody = document.getElementById('attendanceTableBody');
+    const container = document.getElementById('attendanceTableContainer');
+    if (!data.students?.length) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;">No students</td></tr>'; container.style.display = 'none'; return; }
+    container.style.display = 'block';
+    document.getElementById('attStudentCount').textContent = `${data.students.length} students`;
+    tbody.innerHTML = data.students.map((s, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${s.roll_number || '-'}</td>
+        <td><strong>${s.full_name}</strong></td>
+        <td>
+          <div class="att-radio-group">
+            <label style="${s.fee_status === 'locked' ? 'border-color:var(--danger);' : ''}">
+              <input type="radio" name="att-${s.id}" value="present" checked> Present
+            </label>
+            <label>
+              <input type="radio" name="att-${s.id}" value="absent"> Absent
+            </label>
+            <label>
+              <input type="radio" name="att-${s.id}" value="late"> Late
+            </label>
+            <input type="hidden" class="att-student-id" value="${s.id}">
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  } catch (err) { showToast('Failed to load', 'error'); }
+}
+
+async function submitAttendance() {
+  const date = document.getElementById('attDate').value || new Date().toISOString().split('T')[0];
+  const records = [];
+  document.querySelectorAll('.att-student-id').forEach(el => {
+    const id = el.value;
+    const selected = document.querySelector(`input[name="att-${id}"]:checked`);
+    if (selected) records.push({ student_id: id, status: selected.value });
+  });
+  if (!records.length) { showToast('No students loaded', 'error'); return; }
+  try {
+    const res = await fetch('/api/attendance/mark', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date, records })
+    });
+    if (res.ok) { showToast(`✅ Attendance saved for ${records.length} students`, 'success'); }
+    else { const d = await res.json(); showToast(d.error, 'error'); }
+  } catch (err) { showToast('Failed', 'error'); }
+}
+
+// ===== MARKS =====
+async function loadExamsDropdown() {
+  try {
+    const res = await fetch('/api/marks/exams', { headers: { 'Authorization': 'Bearer ' + token } });
+    const exams = await res.json();
+    const select = document.getElementById('marksExam');
+    select.innerHTML = '<option value="">-- Select --</option>';
+    exams.forEach(e => { select.innerHTML += `<option value="${e.id}">${e.exam_name} (${e.exam_type})</option>`; });
+  } catch (err) { /* silent */ }
+}
+
+async function loadStudentsForMarks() {
+  const examId = document.getElementById('marksExam').value;
+  const cls = document.getElementById('marksClass').value;
+  const section = document.getElementById('marksSection').value;
+  if (!examId || !cls) { showToast('Select exam and class', 'error'); return; }
+  try {
+    const res = await fetch(`/api/marks/students/${cls}?section=${section}&exam_id=${examId}`, { headers: { 'Authorization': 'Bearer ' + token } });
+    const students = await res.json();
+    const tbody = document.getElementById('marksEntryBody');
+    const container = document.getElementById('marksEntryContainer');
+    if (!students.length) { container.style.display = 'none'; return; }
+    container.style.display = 'block';
+    document.getElementById('marksStudentCount').textContent = `${students.length} students`;
+    tbody.innerHTML = students.map(s => `
+      <tr>
+        <td>${s.roll_number || '-'}</td>
+        <td>${s.full_name}</td>
+        <td><input type="number" class="marks-input" id="mk-${s.id}" value="${s.marks_obtained !== null ? s.marks_obtained : ''}" min="0" style="width:80px;padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);" onchange="autoGradeTeacher('${s.id}')"></td>
+        <td><input type="text" class="marks-grade" id="gr-${s.id}" value="${s.grade || ''}" style="width:50px;padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);"></td>
+      </tr>
+    `).join('');
+  } catch (err) { showToast('Failed', 'error'); }
+}
+
+function autoGradeTeacher(id) {
+  const marks = parseFloat(document.getElementById('mk-' + id).value);
+  const max = parseFloat(document.getElementById('marksMax').value) || 100;
+  const gr = document.getElementById('gr-' + id);
+  if (!isNaN(marks) && max > 0) {
+    const pct = (marks / max) * 100;
+    if (pct >= 90) gr.value = 'A+'; else if (pct >= 80) gr.value = 'A';
+    else if (pct >= 70) gr.value = 'B+'; else if (pct >= 60) gr.value = 'B';
+    else if (pct >= 50) gr.value = 'C'; else if (pct >= 33) gr.value = 'D';
+    else gr.value = 'F';
+  }
+}
+
+async function saveMarks() {
+  const examId = document.getElementById('marksExam').value;
+  const subject = document.getElementById('marksSubject').value;
+  const maxMarks = parseFloat(document.getElementById('marksMax').value);
+  if (!examId || !subject) { showToast('Select exam and subject', 'error'); return; }
+  const marksData = [];
+  document.querySelectorAll('.marks-input').forEach(el => {
+    const id = el.id.replace('mk-', '');
+    const val = parseFloat(el.value);
+    if (!isNaN(val)) {
+      marksData.push({ student_id: id, marks_obtained: val, grade: document.getElementById('gr-' + id)?.value || '' });
+    }
+  });
+  if (!marksData.length) { showToast('No marks entered', 'error'); return; }
+  try {
+    const res = await fetch('/api/marks/bulk', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ exam_id: examId, subject, max_marks: maxMarks, marks_data: marksData })
+    });
+    if (res.ok) { showToast(`✅ Marks saved for ${marksData.length} students`, 'success'); }
+    else { const d = await res.json(); showToast(d.error, 'error'); }
+  } catch (err) { showToast('Failed', 'error'); }
+}
+
+// ===== ONLINE TESTS =====
+document.getElementById('createTestForm')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = e.target.querySelector('button[type="submit"]');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+  try {
+    const res = await fetch('/api/exams', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        exam_name: document.getElementById('testTitle').value,
+        exam_type: 'online_test',
+        class: document.getElementById('testClass').value,
+        subject: document.getElementById('testSubject').value,
+        max_marks: parseInt(document.getElementById('testMarks').value),
+        duration_minutes: parseInt(document.getElementById('testDuration').value),
+        negative_marking: parseFloat(document.getElementById('testNegative').value) || 0
+      })
+    });
+    if (res.ok) { showToast('✅ Test created!', 'success'); e.target.reset(); }
+    else { showToast('Failed', 'error'); }
+  } catch (err) { showToast('Error', 'error'); }
+  finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-plus"></i> Create Test'; }
+});
+
+// ===== UPLOAD MATERIAL =====
+document.getElementById('uploadForm')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = e.target.querySelector('button[type="submit"]');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+  const formData = new FormData();
+  formData.append('file', document.getElementById('matFile').files[0]);
+  formData.append('title', document.getElementById('matTitle').value);
+  formData.append('description', document.getElementById('matDescription').value);
+  formData.append('class', document.getElementById('matClass').value);
+  formData.append('subject', document.getElementById('matSubject').value);
+  formData.append('is_downloadable', document.getElementById('matDownload').value);
+  try {
+    const res = await fetch('/api/study-material/upload', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token },
+      body: formData
+    });
+    if (res.ok) { showToast('✅ Uploaded successfully!', 'success'); e.target.reset(); }
+    else { showToast('Upload failed', 'error'); }
+  } catch (err) { showToast('Error', 'error'); }
+  finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-upload"></i> Upload'; }
+});
+
+// ===== HOMEWORK =====
+document.getElementById('homeworkForm')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    const res = await fetch('/api/homework', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: document.getElementById('hwTitle').value,
+        description: document.getElementById('hwDesc').value,
+        class: document.getElementById('hwClass').value,
+        section: document.getElementById('hwSection').value,
+        subject: document.getElementById('hwSubject').value,
+        due_date: document.getElementById('hwDue').value
+      })
+    });
+    if (res.ok) { showToast('✅ Homework assigned!', 'success'); e.target.reset(); }
+    else { showToast('Failed', 'error'); }
+  } catch (err) { showToast('Error', 'error'); }
+});
+
+// ===== NOTICES =====
+document.getElementById('noticeForm')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    const res = await fetch('/api/notices', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: document.getElementById('notTitle').value,
+        content: document.getElementById('notContent').value,
+        target_type: document.getElementById('notTarget').value,
+        target_class: document.getElementById('notClass').value
+      })
+    });
+    if (res.ok) { showToast('✅ Notice published!', 'success'); e.target.reset(); }
+    else { showToast('Failed', 'error'); }
+  } catch (err) { showToast('Error', 'error'); }
+});
+
+// ===== DOUBTS =====
+async function loadTeacherDoubts() {
+  const el = document.getElementById('teacherDoubtsList');
+  try {
+    const res = await fetch('/api/doubts', { headers: { 'Authorization': 'Bearer ' + token } });
+    const doubts = await res.json();
+    if (!doubts.length) { el.innerHTML = '<p style="color:var(--text-secondary);">No pending doubts</p>'; return; }
+    el.innerHTML = doubts.map(d => `
+      <div style="padding:14px 18px;border:1px solid var(--border);border-radius:8px;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;">
+          <strong>${d.student_name || 'Student'}</strong>
+          <span class="badge ${d.is_resolved ? 'badge-success' : 'badge-warning'}">${d.is_resolved ? 'Resolved' : 'Pending'}</span>
+        </div>
+        <p style="font-size:13px;color:var(--text-secondary);margin:4px 0;">${d.subject}</p>
+        <p style="margin:8px 0;">${d.question_text}</p>
+        ${!d.is_resolved ? `
+          <form onsubmit="answerDoubt(event, '${d.id}')">
+            <textarea placeholder="Write your answer..." required style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;resize:vertical;background:var(--bg);color:var(--text);" rows="2"></textarea>
+            <button type="submit" class="btn btn-sm btn-primary" style="margin-top:6px;"><i class="fas fa-reply"></i> Answer</button>
+          </form>
+        ` : `<div style="background:var(--bg);padding:10px;border-radius:6px;font-size:13px;border-left:3px solid var(--success);">${d.answer_text}</div>`}
+      </div>
+    `).join('');
+  } catch (err) { el.innerHTML = '<p style="color:var(--text-secondary);">Failed to load</p>'; }
+}
+
+async function answerDoubt(e, doubtId) {
+  e.preventDefault();
+  const text = e.target.querySelector('textarea').value;
+  if (!text) return;
+  try {
+    const res = await fetch(`/api/doubts/${doubtId}/reply`, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ answer_text: text })
+    });
+    if (res.ok) { showToast('✅ Answered!', 'success'); loadTeacherDoubts(); }
+    else { showToast('Failed', 'error'); }
+  } catch (err) { showToast('Error', 'error'); }
+}
+
+async function handleLogout() {
+  try { await fetch('/api/auth/logout', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token } }); } catch (e) {}
+  localStorage.removeItem('fusion_token'); localStorage.removeItem('fusion_user');
+  window.location.href = '/';
+}
+
+function toggleTheme() {
+  const html = document.documentElement;
+  const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('fusion-theme', next);
+  document.getElementById('themeIcon').className = next === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+}
+const savedTheme = localStorage.getItem('fusion-theme') || 'light';
+document.documentElement.setAttribute('data-theme', savedTheme);
+document.getElementById('themeIcon').className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+
+document.getElementById('teacherName').textContent = user.name || 'Teacher';
+document.getElementById('teacherAvatar').textContent = (user.name || 'T').charAt(0).toUpperCase();
+setDefaultDate();
+loadTeacherDashboard();
+</script>
+</body>
+</html>
