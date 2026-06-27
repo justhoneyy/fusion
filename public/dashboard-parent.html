@@ -224,4 +224,338 @@
             <label>Message *</label>
             <textarea id="queryMessage" rows="4" required></textarea>
           </div>
-          <button type="
+          <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Send Query</button>
+          </form>
+        </div>
+        <div class="section-card">
+          <h3><i class="fas fa-history"></i> My Queries</h3>
+          <div id="parentQueriesList"></div>
+        </div>
+      </div>
+
+      <!-- Notifications Section -->
+      <div class="dash-section" id="sec-notifications">
+        <div class="section-card">
+          <h3><i class="fas fa-bell"></i> All Notices</h3>
+          <div id="parentNotices"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const token = localStorage.getItem('fusion_token');
+const user = JSON.parse(localStorage.getItem('fusion_user') || '{}');
+if (!token || user.role !== 'parent') { window.location.href = '/'; }
+
+function showToast(msg, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', info: 'fa-info-circle' };
+  toast.innerHTML = `<i class="fas ${icons[type] || icons.info}"></i> ${msg}`;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 4000);
+}
+
+function showSection(id) {
+  document.querySelectorAll('.dash-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
+  document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+  const titles = { dashboard: 'Dashboard', marks: 'Marks & Results', attendance: 'Attendance', fees: 'Fee Details', homework: 'Homework Status', queries: 'Send Query', notifications: 'Notifications' };
+  document.getElementById('pageTitle').textContent = titles[id] || 'Dashboard';
+  if (id === 'dashboard') loadParentDashboard();
+  if (id === 'marks') loadParentMarks();
+  if (id === 'attendance') loadParentAttendance();
+  if (id === 'fees') loadParentFees();
+  if (id === 'homework') loadParentHomework();
+  if (id === 'queries') { loadQueryChildren(); loadParentQueries(); }
+  if (id === 'notifications') loadParentNotices();
+}
+
+async function api(url, opts = {}) {
+  const res = await fetch(url, { ...opts, headers: { ...opts.headers, 'Authorization': 'Bearer ' + token, ...(!(opts.body instanceof FormData) ? { 'Content-Type': 'application/json' } : {}) } });
+  if (res.status === 401) { handleLogout(); return null; }
+  return res;
+}
+
+// ===== DASHBOARD =====
+async function loadParentDashboard() {
+  const container = document.getElementById('childrenOverview');
+  try {
+    const res = await api('/api/parent/children');
+    const children = await res.json();
+    if (!children.length) { container.innerHTML = '<div class="section-card"><p style="color:var(--text-secondary);">No children linked to your account.</p></div>'; return; }
+    let html = '';
+    for (const child of children) {
+      const mRes = await api(`/api/marks/student/${child.student_id}?limit=1`);
+      const marks = mRes ? await mRes.json() : [];
+      const aRes = await api(`/api/attendance/student/${child.student_id}?limit=1`);
+      const att = aRes ? await aRes.json() : {};
+      const fRes = await api(`/api/fees/student/${child.student_id}?status=overdue`);
+      const fees = fRes ? await fRes.json() : [];
+      const attPct = att.percentage || 0;
+      html += `
+        <div class="child-card">
+          <div class="child-header">
+            <div><h2>${child.name}</h2>
+              <span style="font-size:13px;color:var(--text-secondary);">Class ${child.class} ${child.section || ''} | Roll: ${child.roll_number || 'N/A'}</span>
+            </div>
+            <div class="child-avatar">${child.name.charAt(0)}</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px;margin-top:16px;">
+            <div style="text-align:center;padding:12px;background:var(--bg);border-radius:8px;">
+              <h3 style="font-size:22px;font-weight:800;color:var(--primary);">${attPct}%</h3>
+              <p style="font-size:12px;color:var(--text-secondary);">Attendance</p>
+            </div>
+            <div style="text-align:center;padding:12px;background:var(--bg);border-radius:8px;">
+              <h3 style="font-size:22px;font-weight:800;color:var(--success);">${marks.length > 0 ? marks[0].marks_obtained + '/' + marks[0].max_marks : 'N/A'}</h3>
+              <p style="font-size:12px;color:var(--text-secondary);">Latest Marks</p>
+            </div>
+            <div style="text-align:center;padding:12px;background:var(--bg);border-radius:8px;">
+              <h3 style="font-size:22px;font-weight:800;color:${fees.length > 0 ? 'var(--danger)' : 'var(--success)'};">${fees.length}</h3>
+              <p style="font-size:12px;color:var(--text-secondary);">Pending Fees</p>
+            </div>
+          </div>
+        </div>`;
+    }
+    container.innerHTML = html;
+  } catch (err) { container.innerHTML = '<div class="section-card"><p style="color:var(--text-secondary);">Error loading data</p></div>'; }
+}
+
+// ===== MARKS =====
+async function loadParentMarks() {
+  const container = document.getElementById('childrenMarks');
+  try {
+    const res = await api('/api/parent/children');
+    const children = await res.json();
+    if (!children.length) { container.innerHTML = '<div class="section-card"><p style="color:var(--text-secondary);">No children found.</p></div>'; return; }
+    let html = '';
+    for (const child of children) {
+      const mRes = await api(`/api/marks/student/${child.student_id}`);
+      const marks = mRes ? await mRes.json() : [];
+      html += `
+        <div class="child-card">
+          <div class="child-header"><h2>${child.name} - Class ${child.class}</h2><div class="child-avatar">${child.name.charAt(0)}</div></div>
+          ${marks.length ? `
+          <div class="table-container">
+            <table>
+              <thead><tr><th>Exam</th><th>Subject</th><th>Marks</th><th>Max</th><th>Grade</th><th>Date</th></tr></thead>
+              <tbody>
+                ${marks.map(m => `<tr><td>${m.exam_name}</td><td>${m.subject}</td><td><strong>${m.marks_obtained}</strong></td><td>${m.max_marks}</td><td><span class="badge ${m.marks_obtained >= (m.max_marks * 0.6) ? 'badge-success' : 'badge-danger'}">${m.grade || (m.marks_obtained >= (m.max_marks * 0.6) ? 'Pass' : 'Fail')}</span></td><td>${new Date(m.created_at).toLocaleDateString()}</td></tr>`).join('')}
+              </tbody>
+            </table>
+          </div>` : `<p style="color:var(--text-secondary);">No marks data yet.</p>`}
+        </div>`;
+    }
+    container.innerHTML = html;
+  } catch (err) { container.innerHTML = '<div class="section-card"><p style="color:var(--text-secondary);">Error loading marks</p></div>'; }
+}
+
+// ===== ATTENDANCE =====
+async function loadParentAttendance() {
+  const container = document.getElementById('childrenAttendance');
+  try {
+    const res = await api('/api/parent/children');
+    const children = await res.json();
+    if (!children.length) { container.innerHTML = '<div class="section-card"><p style="color:var(--text-secondary);">No children found.</p></div>'; return; }
+    let html = '';
+    for (const child of children) {
+      const aRes = await api(`/api/attendance/student/${child.student_id}`);
+      const aRes = await api(`/api/attendance/student/${child.student_id}`);
+      const attData = aRes ? await aRes.json() : {};
+      const records = attData.records || [];
+      const pct = attData.percentage || 0;
+      html += `
+        <div class="child-card">
+          <div class="child-header"><h2>${child.name} - Class ${child.class}</h2><div class="child-avatar">${child.name.charAt(0)}</div></div>
+          <div style="margin-bottom:12px;">
+            <div style="display:flex;justify-content:space-between;font-size:14px;">
+              <span>Overall Attendance</span>
+              <span><strong>${pct}%</strong></span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(pct, 100)}%"></div></div>
+          </div>
+          ${records.length ? `
+          <p style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;">Last 30 days:</p>
+          <div class="attendance-grid">
+            ${records.slice(0, 30).map(r => {
+              const cls = r.status === 'present' ? 'att-present' : r.status === 'absent' ? 'att-absent' : 'att-late';
+              const day = new Date(r.date).getDate();
+              return `<div class="attendance-day ${cls}" title="${r.date}: ${r.status}">${day}</div>`;
+            }).join('')}
+          </div>
+          <div style="display:flex;gap:16px;margin-top:12px;font-size:12px;color:var(--text-secondary);">
+            <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:rgba(16,185,129,0.15);vertical-align:middle;margin-right:4px;"></span> Present</span>
+            <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:rgba(239,68,68,0.15);vertical-align:middle;margin-right:4px;"></span> Absent</span>
+            <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:rgba(245,158,11,0.15);vertical-align:middle;margin-right:4px;"></span> Late</span>
+          </div>` : `<p style="color:var(--text-secondary);">No attendance records yet.</p>`}
+        </div>`;
+    }
+    container.innerHTML = html;
+  } catch (err) { container.innerHTML = '<div class="section-card"><p style="color:var(--text-secondary);">Error loading attendance</p></div>'; }
+}
+
+// ===== FEES =====
+async function loadParentFees() {
+  const container = document.getElementById('childrenFees');
+  try {
+    const res = await api('/api/parent/children');
+    const children = await res.json();
+    if (!children.length) { container.innerHTML = '<div class="section-card"><p style="color:var(--text-secondary);">No children found.</p></div>'; return; }
+    let html = '';
+    for (const child of children) {
+      const fRes = await api(`/api/fees/student/${child.student_id}`);
+      const fees = fRes ? await fRes.json() : [];
+      html += `
+        <div class="child-card">
+          <div class="child-header"><h2>${child.name} - Fee Details</h2><div class="child-avatar">${child.name.charAt(0)}</div></div>
+          ${fees.length ? `
+          <div class="table-container">
+            <table>
+              <thead><tr><th>Fee Type</th><th>Due Date</th><th>Amount</th><th>Status</th><th>Paid On</th></tr></thead>
+              <tbody>
+                ${fees.map(f => `
+                  <tr>
+                    <td>${f.fee_type || 'Tuition Fee'}</td>
+                    <td>${f.due_date ? new Date(f.due_date).toLocaleDateString() : 'N/A'}</td>
+                    <td><strong>₹${f.amount || f.fee_amount || 0}</strong></td>
+                    <td><span class="badge ${f.status === 'paid' ? 'badge-success' : f.status === 'overdue' ? 'badge-danger' : 'badge-warning'}">${f.status}</span></td>
+                    <td>${f.paid_date ? new Date(f.paid_date).toLocaleDateString() : '-'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>` : `<p style="color:var(--text-secondary);">No fee records found.</p>`}
+        </div>`;
+    }
+    container.innerHTML = html;
+  } catch (err) { container.innerHTML = '<div class="section-card"><p style="color:var(--text-secondary);">Error loading fees</p></div>'; }
+}
+
+// ===== HOMEWORK =====
+async function loadParentHomework() {
+  const container = document.getElementById('childrenHomework');
+  try {
+    const res = await api('/api/parent/children');
+    const children = await res.json();
+    if (!children.length) { container.innerHTML = '<div class="section-card"><p style="color:var(--text-secondary);">No children found.</p></div>'; return; }
+    let html = '';
+    for (const child of children) {
+      const hRes = await api(`/api/homework/student/${child.student_id}`);
+      const hw = hRes ? await hRes.json() : [];
+      html += `
+        <div class="child-card">
+          <div class="child-header"><h2>${child.name} - Homework</h2><div class="child-avatar">${child.name.charAt(0)}</div></div>
+          ${hw.length ? `
+          <div class="table-container">
+            <table>
+              <thead><tr><th>Subject</th><th>Title</th><th>Due Date</th><th>Status</th></tr></thead>
+              <tbody>
+                ${hw.map(h => `<tr>
+                  <td>${h.subject}</td>
+                  <td>${h.title}</td>
+                  <td>${h.due_date ? new Date(h.due_date).toLocaleDateString() : '-'}</td>
+                  <td><span class="badge ${h.is_completed ? 'badge-success' : new Date(h.due_date) < new Date() ? 'badge-danger' : 'badge-warning'}">${h.is_completed ? 'Completed' : new Date(h.due_date) < new Date() ? 'Overdue' : 'Pending'}</span></td>
+                </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>` : `<p style="color:var(--text-secondary);">No homework assigned yet.</p>`}
+        </div>`;
+    }
+    container.innerHTML = html;
+  } catch (err) { container.innerHTML = '<div class="section-card"><p style="color:var(--text-secondary);">Error loading homework</p></div>'; }
+}
+
+// ===== QUERIES =====
+async function loadQueryChildren() {
+  try {
+    const res = await api('/api/parent/children');
+    const children = await res.json();
+    const select = document.getElementById('queryChild');
+    select.innerHTML = '<option value="">Select your child</option>' + children.map(c => `<option value="${c.student_id}">${c.name} - Class ${c.class}</option>`).join('');
+  } catch (err) {}
+}
+
+document.getElementById('queryForm')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = e.target.querySelector('button[type="submit"]');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+  try {
+    const res = await api('/api/doubts', {
+      method: 'POST',
+      body: JSON.stringify({
+        student_id: document.getElementById('queryChild').value,
+        subject: document.getElementById('querySubject').value,
+        question_text: document.getElementById('queryMessage').value
+      })
+    });
+    if (res && res.ok) { showToast('✅ Query sent successfully!', 'success'); e.target.reset(); }
+    else { showToast('Failed to send query', 'error'); }
+  } catch (err) { showToast('Error', 'error'); }
+  finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Query'; }
+});
+
+async function loadParentQueries() {
+  const container = document.getElementById('parentQueriesList');
+  try {
+    const res = await api('/api/doubts/parent');
+    const queries = res ? await res.json() : [];
+    if (!queries.length) { container.innerHTML = '<p style="color:var(--text-secondary);">No queries submitted yet.</p>'; return; }
+    container.innerHTML = queries.map(q => `
+      <div style="padding:14px;border:1px solid var(--border);border-radius:8px;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;">
+          <strong>${q.subject}</strong>
+          <span class="badge ${q.is_resolved ? 'badge-success' : 'badge-warning'}">${q.is_resolved ? 'Resolved' : 'Pending'}</span>
+        </div>
+        <p style="font-size:14px;margin:8px 0;">${q.question_text}</p>
+        ${q.answer_text ? `<div style="background:var(--bg);padding:10px;border-radius:6px;border-left:3px solid var(--success);font-size:13px;"><strong>Reply:</strong> ${q.answer_text}</div>` : ''}
+        <p style="font-size:11px;color:var(--text-light);margin-top:6px;">${new Date(q.created_at).toLocaleString()}</p>
+      </div>
+    `).join('');
+  } catch (err) { container.innerHTML = '<p style="color:var(--text-secondary);">Error loading queries</p>'; }
+}
+
+// ===== NOTICES =====
+async function loadParentNotices() {
+  const container = document.getElementById('parentNotices');
+  try {
+    const res = await api('/api/notices');
+    const notices = res ? await res.json() : [];
+    if (!notices.length) { container.innerHTML = '<p style="color:var(--text-secondary);">No notices at this time.</p>'; return; }
+    container.innerHTML = notices.map(n => `
+      <div style="padding:16px;border:1px solid var(--border);border-radius:10px;margin-bottom:12px;">
+        <h4 style="font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px;"><i class="fas fa-bullhorn" style="color:var(--primary);font-size:14px;"></i> ${n.title}</h4>
+        <p style="font-size:14px;margin:8px 0;">${n.content}</p>
+        <p style="font-size:11px;color:var(--text-light);">${new Date(n.created_at).toLocaleString()} ${n.created_by ? '| by ' + n.created_by : ''}</p>
+      </div>
+    `).join('');
+  } catch (err) { container.innerHTML = '<p style="color:var(--text-secondary);">Error loading notices</p>'; }
+}
+
+async function handleLogout() {
+  try { await api('/api/auth/logout', { method: 'POST' }); } catch (e) {}
+  localStorage.removeItem('fusion_token');
+  localStorage.removeItem('fusion_user');
+  window.location.href = '/';
+}
+
+function toggleTheme() {
+  const html = document.documentElement;
+  const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('fusion-theme', next);
+  document.getElementById('themeIcon').className = next === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+}
+
+const savedTheme = localStorage.getItem('fusion-theme') || 'light';
+document.documentElement.setAttribute('data-theme', savedTheme);
+document.getElementById('themeIcon').className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+document.getElementById('parentName').textContent = user.name || 'Parent';
+document.getElementById('parentAvatar').textContent = (user.name || 'P').charAt(0).toUpperCase();
+loadParentDashboard();
+</script>
+</body>
+</html>
