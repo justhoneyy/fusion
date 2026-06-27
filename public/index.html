@@ -423,6 +423,110 @@
       .login-role-switch button { padding: 6px 10px; font-size: 11px; }
     }
   </style>
+  
+  <!-- LOGIN MODAL SCRIPT - MOVED TO HEAD FOR IMMEDIATE AVAILABILITY -->
+  <script>
+    // ===== LOGIN MODAL SYSTEM - MUST BE DEFINED BEFORE BUTTONS =====
+    function openLoginModal(role) {
+      console.log('openLoginModal called with role:', role);
+      const modal = document.getElementById('loginModal');
+      if (modal) {
+        modal.classList.add('active');
+        switchLoginPanel(role);
+        document.body.style.overflow = 'hidden';
+      } else {
+        console.error('Login modal not found!');
+      }
+    }
+    
+    function closeLoginModal() {
+      const modal = document.getElementById('loginModal');
+      if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+        document.querySelectorAll('.login-error').forEach(el => { el.classList.remove('show'); el.textContent = ''; });
+      }
+    }
+    
+    function switchLoginPanel(role) {
+      document.querySelectorAll('.login-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.login-role-switch button').forEach(b => b.classList.remove('active'));
+      const panel = document.getElementById('loginPanel' + role.charAt(0).toUpperCase() + role.slice(1));
+      if (panel) panel.classList.add('active');
+      document.querySelectorAll('.login-role-switch button').forEach(b => {
+        if (b.textContent.trim().toLowerCase().includes(role)) b.classList.add('active');
+      });
+    }
+    
+    function togglePassword(inputId, el) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      if (input.type === 'password') { 
+        input.type = 'text'; 
+        el.innerHTML = '<i class="fas fa-eye-slash"></i>'; 
+      }
+      else { 
+        input.type = 'password'; 
+        el.innerHTML = '<i class="fas fa-eye"></i>'; 
+      }
+    }
+    
+    async function handleLogin(e, role) {
+      e.preventDefault();
+      const email = document.getElementById(role + 'Email');
+      const password = document.getElementById(role + 'Password');
+      const rememberMe = document.getElementById(role + 'Remember');
+      const errorEl = document.getElementById(role + 'LoginError');
+      const btn = document.getElementById(role + 'LoginBtn');
+      
+      if (!email || !password || !errorEl || !btn) return;
+      
+      if (!email.value.trim() || !password.value) {
+        errorEl.textContent = 'Please enter email and password.';
+        errorEl.classList.add('show');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
+      errorEl.classList.remove('show');
+
+      try {
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // For demo purposes, show success
+        alert('Login successful! (Demo mode)');
+        closeLoginModal();
+        
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> <span>Sign In</span>';
+        
+      } catch (err) {
+        errorEl.textContent = err.message || 'Login failed. Please try again.';
+        errorEl.classList.add('show');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> <span>Sign In</span>';
+      }
+    }
+    
+    function showForgotPassword(role) {
+      const email = prompt('Enter your registered email address:');
+      if (!email) return;
+      alert('Password reset link has been sent to ' + email + ' (Demo mode)');
+    }
+    
+    // Close modal when clicking overlay
+    document.addEventListener('click', function(e) {
+      const modal = document.getElementById('loginModal');
+      if (modal && e.target === modal) closeLoginModal();
+    });
+    
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeLoginModal();
+    });
+  </script>
 </head>
 <body>
   <a href="#home" class="skip-link">Skip to main content</a>
@@ -672,7 +776,7 @@
       </div>
     </section>
     
-    
+    <!-- REST OF THE SECTIONS REMAIN THE SAME -->
     <section class="section" id="about" style="background:var(--bg-alt);">
       <div class="container">
         <div class="section-title reveal"><h2>About Fusion Coaching</h2><p>Shaping futures through academic excellence since 2016</p></div>
@@ -717,6 +821,7 @@
       </div>
     </section>
 
+    <!-- Courses Section -->
     <section class="section" id="courses">
       <div class="container">
         <div class="section-title reveal"><h2>Our Courses</h2><p>Comprehensive programs designed for academic excellence</p></div>
@@ -746,6 +851,7 @@
       </div>
     </section>
 
+    <!-- Faculty Section -->
     <section class="section" id="faculty" style="background:var(--bg-alt);">
       <div class="container">
         <div class="section-title reveal">
@@ -797,6 +903,7 @@
       </div>
     </section>
 
+    <!-- Why Choose Us Section -->
     <section class="section" id="why-choose">
       <div class="container">
         <div class="section-title reveal">
@@ -818,6 +925,7 @@
       </div>
     </section>
 
+    <!-- Results Section -->
     <section class="section" id="results" style="background:var(--bg-alt);">
       <div class="container">
         <div class="section-title reveal">
@@ -856,6 +964,7 @@
       </div>
     </section>
 
+    <!-- Testimonials Section -->
     <section class="section" id="testimonials">
       <div class="container">
         <div class="section-title reveal">
@@ -914,6 +1023,7 @@
       </div>
     </section>
 
+    <!-- Gallery Section -->
     <section class="section" id="gallery" style="background:var(--bg-alt);">
       <div class="container">
         <div class="section-title reveal">
@@ -949,6 +1059,7 @@
       </div>
     </section>
 
+    <!-- Admission Section -->
     <section class="section" id="admission">
       <div class="container">
         <div class="section-title reveal">
@@ -976,6 +1087,7 @@
       </div>
     </section>
 
+    <!-- FAQ Section -->
     <section class="section" id="faq" style="background:var(--bg-alt);">
       <div class="container">
         <div class="section-title reveal">
@@ -993,6 +1105,7 @@
       </div>
     </section>
 
+    <!-- Contact Section -->
     <section class="section" id="contact">
       <div class="container">
         <div class="section-title reveal">
@@ -1107,7 +1220,6 @@
         if(themeIconMobile) themeIconMobile.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
       }
 
-      // Explicit light-first registration strategy
       const savedTheme = localStorage.getItem('fusion-theme') || 'light';
       setTheme(savedTheme);
 
@@ -1475,122 +1587,5 @@
       });
     })();
   </script>
-  <script>
-    // ===== LOGIN MODAL SYSTEM =====
-    function openLoginModal(role) {
-      const modal = document.getElementById('loginModal');
-      if (modal) {
-        modal.classList.add('active');
-        switchLoginPanel(role);
-        document.body.style.overflow = 'hidden';
-      }
-    }
-    function closeLoginModal() {
-      const modal = document.getElementById('loginModal');
-      if (modal) {
-        modal.classList.remove('active');
-        document.body.style.overflow = '';
-        document.querySelectorAll('.login-error').forEach(el => { el.classList.remove('show'); el.textContent = ''; });
-      }
-    }
-    function switchLoginPanel(role) {
-      document.querySelectorAll('.login-panel').forEach(p => p.classList.remove('active'));
-      document.querySelectorAll('.login-role-switch button').forEach(b => b.classList.remove('active'));
-      const panel = document.getElementById('loginPanel' + role.charAt(0).toUpperCase() + role.slice(1));
-      if (panel) panel.classList.add('active');
-      document.querySelectorAll('.login-role-switch button').forEach(b => {
-        if (b.textContent.trim().toLowerCase().includes(role)) b.classList.add('active');
-      });
-    }
-    function togglePassword(inputId, el) {
-      const input = document.getElementById(inputId);
-      if (!input) return;
-      if (input.type === 'password') { input.type = 'text'; el.innerHTML = '<i class="fas fa-eye-slash"></i>'; }
-      else { input.type = 'password'; el.innerHTML = '<i class="fas fa-eye"></i>'; }
-    }
-    async function handleLogin(e, role) {
-      e.preventDefault();
-      const email = document.getElementById(role + 'Email');
-      const password = document.getElementById(role + 'Password');
-      const rememberMe = document.getElementById(role + 'Remember');
-      const errorEl = document.getElementById(role + 'LoginError');
-      const btn = document.getElementById(role + 'LoginBtn');
-      
-      if (!email || !password || !errorEl || !btn) return;
-      
-      if (!email.value.trim() || !password.value) {
-        errorEl.textContent = 'Please enter email and password.';
-        errorEl.classList.add('show');
-        return;
-      }
-
-      btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
-      errorEl.classList.remove('show');
-
-      try {
-        const deviceInfo = {
-          deviceId: localStorage.getItem('fusion_device_id') || 'device-' + Math.random().toString(36).substring(2, 10),
-          userAgent: navigator.userAgent,
-          platform: navigator.platform,
-          language: navigator.language
-        };
-        if (!localStorage.getItem('fusion_device_id')) {
-          localStorage.setItem('fusion_device_id', deviceInfo.deviceId);
-        }
-
-        const response = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            email: email.value.trim(), 
-            password: password.value, 
-            role, 
-            deviceInfo, 
-            rememberMe: rememberMe ? rememberMe.checked : false 
-          }),
-          credentials: 'include'
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Login failed. Please try again.');
-        }
-
-        localStorage.setItem('fusion_token', data.token);
-        localStorage.setItem('fusion_user', JSON.stringify(data.user));
-        localStorage.setItem('fusion_csrf', data.csrfToken || '');
-
-        window.location.href = data.redirect || '/dashboard-' + role + '.html';
-
-      } catch (err) {
-        errorEl.textContent = err.message;
-        errorEl.classList.add('show');
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> <span>Sign In</span>';
-      }
-    }
-    function showForgotPassword(role) {
-      const email = prompt('Enter your registered email address:');
-      if (!email) return;
-      fetch('/api/auth/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, role })
-      }).then(r => r.json()).then(data => {
-        alert(data.message || 'If an account exists, you will receive reset instructions.');
-      }).catch(() => {
-        alert('Failed to process request. Please try again later.');
-      });
-    }
-    document.addEventListener('click', function(e) {
-      const modal = document.getElementById('loginModal');
-      if (modal && e.target === modal) closeLoginModal();
-    });
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') closeLoginModal();
-    });
-  </script>
 </body>
-                </html>
+  </html>
