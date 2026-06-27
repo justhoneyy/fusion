@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fusion Coaching - Parent Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root {
+      --primary: #f59e0b; --primary-dark: #d97706; --primary-light: #fbbf24;
+      --primary-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      --success: #10b981; --danger: #ef4444; --gold: #f59e0b;
+      --bg: #f1f5f9; --bg-card: #ffffff; --sidebar: #0f172a;
+      --text: #0f172a; --text-secondary: #475569; --text-light: #94a3b8;
+      --border: #e2e8f0; --shadow: 0 4px 20px rgba(0,0,0,0.06);
+      --radius: 12px; --radius-lg: 20px;
+      --font: 'Inter', sans-serif; --font-heading: 'Poppins', 'Inter', sans-serif;
+    }
+    [data-theme="dark"] {
+      --bg: #0b1120; --bg-card: #1e293b; --sidebar: #020617;
+      --text: #f1f5f9; --text-secondary: #94a3b8; --text-light: #64748b;
+      --border: #1e293b; --shadow: 0 4px 20px rgba(0,0,0,0.4);
+      --primary: #fbbf24; --primary-dark: #f59e0b;
+      --primary-gradient: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); overflow-x: hidden; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--text-light); border-radius: 3px; }
+
+    .dash-wrapper { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 250px; background: var(--sidebar); color: #fff; position: fixed;
+      top: 0; left: 0; height: 100vh; z-index: 100; display: flex;
+      flex-direction: column; transition: transform 0.3s;
+    }
+    .sidebar-brand { padding: 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 10px; }
+    .sidebar-brand h2 { font-family: var(--font-heading); font-size: 20px; font-weight: 700; }
+    .sidebar-brand span { font-size: 11px; opacity: 0.6; }
+    .sidebar-nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+    .sidebar-nav a {
+      display: flex; align-items: center; gap: 12px; padding: 10px 14px;
+      border-radius: 10px; color: rgba(255,255,255,0.7); font-size: 14px;
+      font-weight: 500; transition: all 0.3s; text-decoration: none;
+    }
+    .sidebar-nav a:hover, .sidebar-nav a.active { background: rgba(245,158,11,0.3); color: #fff; }
+    .sidebar-nav a i { width: 20px; text-align: center; }
+    .sidebar-footer { padding: 16px 12px; border-top: 1px solid rgba(255,255,255,0.08); }
+    .sidebar-footer a { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 10px; color: rgba(255,255,255,0.7); font-size: 14px; text-decoration: none; }
+    .sidebar-footer a:hover { background: rgba(239,68,68,0.2); color: var(--danger); }
+
+    .main-content { flex: 1; margin-left: 250px; padding: 24px; min-height: 100vh; }
+
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 24px; padding: 16px 24px; background: var(--bg-card);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+    }
+    .topbar-left { display: flex; align-items: center; gap: 16px; }
+    .topbar-left h1 { font-family: var(--font-heading); font-size: 20px; font-weight: 700; }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+    .topbar-right .user-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--primary-gradient); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 600; }
+    .hamburger { display: none; background: none; border: none; font-size: 22px; color: var(--text); cursor: pointer; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: var(--bg-card); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); text-align: center; }
+    .stat-card h3 { font-size: 28px; font-weight: 800; background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .stat-card p { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+
+    .section-card { background: var(--bg-card); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow); margin-bottom: 20px; }
+    .section-card h3 { font-size: 18px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+    .section-card h3 i { color: var(--primary); }
+
+    .child-card {
+      background: var(--bg-card); border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg); padding: 24px; margin-bottom: 20px;
+      transition: all 0.3s;
+    }
+    .child-card:hover { box-shadow: var(--shadow); border-color: var(--primary-light); }
+    .child-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .child-header h2 { font-family: var(--font-heading); font-size: 20px; font-weight: 700; }
+    .child-avatar { width: 50px; height: 50px; border-radius: 50%; background: var(--primary-gradient); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 20px; font-weight: 700; }
+
+    .table-container { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: var(--bg); font-size: 12px; font-weight: 600; padding: 12px 14px; text-align: left; color: var(--text-secondary); border-bottom: 1px solid var(--border); }
+    td { padding: 10px 14px; font-size: 14px; border-bottom: 1px solid var(--border); }
+    tr:hover { background: var(--bg); }
+
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+    .badge-success { background: rgba(16,185,129,0.1); color: var(--success); }
+    .badge-danger { background: rgba(239,68,68,0.1); color: var(--danger); }
+    .badge-warning { background: rgba(245,158,11,0.1); color: var(--gold); }
+    .badge-info { background: rgba(245,158,11,0.1); color: var(--primary-dark); }
+
+    .dash-section { display: none; }
+    .dash-section.active { display: block; }
+
+    .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; }
+    .toast { padding: 12px 18px; border-radius: 10px; color: #fff; font-size: 14px; margin-bottom: 8px; animation: slideIn 0.3s; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+    .toast-success { background: var(--success); }
+    .toast-error { background: var(--danger); }
+    .toast-info { background: var(--primary); }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.3s; border: none; }
+    .btn-primary { background: var(--primary-gradient); color: #fff; }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(245,158,11,0.35); }
+    .btn-outline { background: transparent; border: 2px solid var(--border); color: var(--text); }
+    .btn-sm { padding: 6px 14px; font-size: 12px; }
+
+    .query-form { max-width: 600px; }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%; padding: 10px 14px; border: 1.5px solid var(--border);
+      border-radius: 8px; background: var(--bg-card); color: var(--text); font-size: 14px;
+    }
+    .form-group input:focus, .form-group textarea:focus { border-color: var(--primary); outline: none; }
+
+    .attendance-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(32px, 1fr)); gap: 4px; max-width: 350px; }
+    .attendance-day { width: 100%; aspect-ratio: 1; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; }
+    .att-present { background: rgba(16,185,129,0.15); color: var(--success); }
+    .att-absent { background: rgba(239,68,68,0.15); color: var(--danger); }
+    .att-late { background: rgba(245,158,11,0.15); color: var(--gold); }
+
+    .progress-bar { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; margin: 8px 0; }
+    .progress-fill { height: 100%; border-radius: 4px; background: var(--primary-gradient); transition: width 0.8s; }
+
+    @media(max-width: 1024px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main-content { margin-left: 0; }
+      .hamburger { display: block; }
+    }
+    @media(max-width: 768px) { .main-content { padding: 16px; } }
+  </style>
+</head>
+<body>
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="dash-wrapper">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <i class="fas fa-users" style="font-size:24px;color:var(--primary-light);"></i>
+      <div><h2>Fusion</h2><span>Parent Portal</span></div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="#" class="active" onclick="showSection('dashboard')"><i class="fas fa-home"></i> Dashboard</a>
+      <a href="#" onclick="showSection('marks')"><i class="fas fa-chart-bar"></i> Marks & Results</a>
+      <a href="#" onclick="showSection('attendance')"><i class="fas fa-calendar-check"></i> Attendance</a>
+      <a href="#" onclick="showSection('fees')"><i class="fas fa-money-bill-wave"></i> Fee Details</a>
+      <a href="#" onclick="showSection('homework')"><i class="fas fa-tasks"></i> Homework Status</a>
+      <a href="#" onclick="showSection('queries')"><i class="fas fa-question-circle"></i> Send Query</a>
+      <a href="#" onclick="showSection('notifications')"><i class="fas fa-bell"></i> Notifications</a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="#" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="hamburger" onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="fas fa-bars"></i></button>
+        <h1 id="pageTitle">Dashboard</h1>
+      </div>
+      <div class="topbar-right">
+        <button onclick="toggleTheme()" style="background:none;border:none;color:var(--text);font-size:18px;cursor:pointer;padding:8px;"><i class="fas fa-moon" id="themeIcon"></i></button>
+        <div class="user-avatar" id="parentAvatar">P</div>
+        <span id="parentName" style="font-weight:500;font-size:14px;">Parent</span>
+      </div>
+    </div>
+
+    <!-- Dashboard Section -->
+    <div class="dash-section active" id="sec-dashboard">
+      <div id="childrenOverview"></div>
+    </div>
+
+    <!-- Marks Section -->
+    <div class="dash-section" id="sec-marks">
+      <div id="childrenMarks"></div>
+    </div>
+
+    <!-- Attendance Section -->
+    <div class="dash-section" id="sec-attendance">
+      <div id="childrenAttendance"></div>
+    </div>
+
+    <!-- Fees Section -->
+    <div class="dash-section" id="sec-fees">
+      <div id="childrenFees"></div>
+    </div>
+
+    <!-- Homework Section -->
+    <div class="dash-section" id="sec-homework">
+      <div id="childrenHomework"></div>
+    </div>
+
+    <!-- Queries Section -->
+    <div class="dash-section" id="sec-queries">
+      <div class="section-card">
+        <h3><i class="fas fa-question-circle"></i> Send Query to School</h3>
+        <form id="queryForm" class="query-form">
+          <div class="form-group">
+            <label>Regarding Child</label>
+            <select id="queryChild"><option value="">Select your child</option></select>
+          </div>
+          <div class="form-group">
+            <label>Subject</label>
+            <select id="querySubject">
+              <option value="">Select</option>
+              <option>Academic Performance</option>
+              <option>Fee Related</option>
+              <option>Attendance</option>
+              <option>General Query</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Message *</label>
+            <textarea id="queryMessage" rows="4" required></textarea>
+          </div>
+          <button type="
