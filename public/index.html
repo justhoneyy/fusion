@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
   <meta name="description" content="Fusion Coaching - Premier Science & Commerce Coaching Institute. JEE, NEET, Foundation Courses. 5000+ Students, 95% Success Rate, 10+ Years of Excellence.">
   <meta name="keywords" content="Fusion Coaching, Science Coaching, Commerce Coaching, JEE, NEET, Best Coaching Institute, Physics, Chemistry, Mathematics">
   <meta name="author" content="Fusion Coaching">
@@ -1199,6 +1199,7 @@
 
       // ===== COUNTER ANIMATION =====
       const counters = document.querySelectorAll('.counter');
+      let counterStarted = false;
 
       function animateCounters() {
         counters.forEach(function(counter) {
@@ -1214,7 +1215,20 @@
           }
         });
       }
-      setTimeout(animateCounters, 600);
+
+      function startCountersIfVisible() {
+        if (counterStarted) return;
+        const statsSection = document.querySelector('.hero-stats');
+        if (!statsSection) return;
+        const rect = statsSection.getBoundingClientRect();
+        if (rect.top < window.innerHeight - 50) {
+          counterStarted = true;
+          animateCounters();
+        }
+      }
+
+      window.addEventListener('scroll', startCountersIfVisible, { passive: true });
+      setTimeout(startCountersIfVisible, 800);
 
       // ===== SCROLL REVEAL =====
       const revealElements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right');
@@ -1578,7 +1592,5 @@
       if (e.key === 'Escape') closeLoginModal();
     });
   </script>
-  <script>
-  </script>
 </body>
-</html>
+                </html>
