@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fusion Coaching - Admin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root {
+      --primary: #1a56db; --primary-dark: #0f3a8a; --primary-light: #3b82f6;
+      --primary-gradient: linear-gradient(135deg, #1a56db 0%, #3b82f6 100%);
+      --success: #10b981; --danger: #ef4444; --gold: #f59e0b;
+      --bg: #f1f5f9; --bg-card: #ffffff; --sidebar: #0f172a;
+      --text: #0f172a; --text-secondary: #475569; --text-light: #94a3b8;
+      --border: #e2e8f0; --shadow: 0 4px 20px rgba(0,0,0,0.06);
+      --radius: 12px; --radius-lg: 20px;
+      --font: 'Inter', sans-serif; --font-heading: 'Poppins', 'Inter', sans-serif;
+    }
+    [data-theme="dark"] {
+      --bg: #0b1120; --bg-card: #1e293b; --sidebar: #020617;
+      --text: #f1f5f9; --text-secondary: #94a3b8; --text-light: #64748b;
+      --border: #1e293b; --shadow: 0 4px 20px rgba(0,0,0,0.4);
+      --primary: #3b82f6; --primary-dark: #1d4ed8;
+      --primary-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); overflow-x: hidden; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--text-light); border-radius: 3px; }
+
+    /* ---- LAYOUT ---- */
+    .dash-wrapper { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 260px; background: var(--sidebar); color: #fff; position: fixed;
+      top: 0; left: 0; height: 100vh; z-index: 100; display: flex;
+      flex-direction: column; transition: transform 0.3s;
+    }
+    .sidebar-brand {
+      padding: 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .sidebar-brand h2 { font-family: var(--font-heading); font-size: 22px; font-weight: 700; }
+    .sidebar-brand span { font-size: 12px; opacity: 0.6; font-weight: 300; }
+    .sidebar-nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+    .sidebar-nav .nav-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.5; padding: 16px 12px 8px; }
+    .sidebar-nav a {
+      display: flex; align-items: center; gap: 12px; padding: 10px 14px;
+      border-radius: 10px; color: rgba(255,255,255,0.7); font-size: 14px;
+      font-weight: 500; transition: all 0.3s; text-decoration: none;
+    }
+    .sidebar-nav a:hover, .sidebar-nav a.active { background: var(--primary); color: #fff; }
+    .sidebar-nav a i { width: 20px; text-align: center; font-size: 16px; }
+    .sidebar-footer { padding: 16px 12px; border-top: 1px solid rgba(255,255,255,0.08); }
+
+    .main-content { flex: 1; margin-left: 260px; padding: 24px; min-height: 100vh; }
+    
+    /* ---- TOP BAR ---- */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 24px; padding: 16px 24px; background: var(--bg-card);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+    }
+    .topbar-left { display: flex; align-items: center; gap: 16px; }
+    .topbar-left h1 { font-family: var(--font-heading); font-size: 22px; font-weight: 700; }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+    .topbar-right .user-avatar {
+      width: 40px; height: 40px; border-radius: 50%; background: var(--primary-gradient);
+      display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600;
+    }
+    .hamburger { display: none; background: none; border: none; font-size: 22px; color: var(--text); cursor: pointer; }
+
+    /* ---- CARDS ---- */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 18px; margin-bottom: 24px; }
+    .stat-card {
+      background: var(--bg-card); border-radius: var(--radius); padding: 20px;
+      box-shadow: var(--shadow); display: flex; align-items: center; gap: 16px;
+    }
+    .stat-icon {
+      width: 50px; height: 50px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center; font-size: 20px;
+    }
+    .stat-info h3 { font-size: 24px; font-weight: 700; }
+    .stat-info p { font-size: 13px; color: var(--text-secondary); }
+
+    /* ---- TABLE ---- */
+    .table-container { overflow-x: auto; background: var(--bg-card); border-radius: var(--radius); box-shadow: var(--shadow); }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: var(--bg); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding: 14px 16px; text-align: left; color: var(--text-secondary); border-bottom: 1px solid var(--border); }
+    td { padding: 12px 16px; font-size: 14px; border-bottom: 1px solid var(--border); }
+    tr:hover { background: var(--bg); }
+    .marks-input { width: 80px; padding: 8px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 14px; text-align: center; background: var(--bg); color: var(--text); }
+    .marks-input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(26,86,219,0.1); }
+
+    /* ---- FORMS ---- */
+    .form-row { display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+    .form-group { flex: 1; min-width: 200px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+    .form-group select, .form-group input {
+      width: 100%; padding: 10px 14px; border: 1.5px solid var(--border);
+      border-radius: 8px; background: var(--bg-card); color: var(--text); font-size: 14px;
+    }
+    .form-group select:focus, .form-group input:focus { border-color: var(--primary); outline: none; }
+
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.3s; border: none; }
+    .btn-primary { background: var(--primary-gradient); color: #fff; }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(26,86,219,0.35); }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-outline { background: transparent; border: 2px solid var(--border); color: var(--text); }
+    .btn-sm { padding: 6px 14px; font-size: 12px; }
+
+    /* ---- SECTIONS ---- */
+    .dash-section { display: none; }
+    .dash-section.active { display: block; }
+
+    /* ---- TOAST ---- */
+    .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; }
+    .toast {
+      padding: 14px 20px; border-radius: 10px; color: #fff; font-size: 14px;
+      margin-bottom: 8px; animation: slideInRight 0.3s; box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .toast-success { background: var(--success); }
+    .toast-error { background: var(--danger); }
+    .toast-info { background: var(--primary); }
+    @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    .loading-spinner {
+      display: inline-block; width: 20px; height: 20px; border: 2px solid var(--border);
+      border-top-color: var(--primary); border-radius: 50%; animation: spin 0.6s linear;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .badge {
+      display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+    }
+    .badge-success { background: rgba(16,185,129,0.1); color: var(--success); }
+    .badge-danger { background: rgba(239,68,68,0.1); color: var(--danger); }
+    .badge-warning { background: rgba(245,158,11,0.1); color: var(--gold); }
+
+    /* ---- RESPONSIVE ---- */
+    @media(max-width: 1024px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main-content { margin-left: 0; }
+      .hamburger { display: block; }
+    }
+    @media(max-width: 768px) {
+      .main-content { padding: 16px; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media(max-width: 480px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      .form-row { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="dash-wrapper">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <i class="fas fa-graduation-cap" style="font-size:28px;color:var(--primary-light);"></i>
+      <div><h2>Fusion</h2><span>Admin Panel</span></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-label">Main</div>
+      <a href="#" class="active" onclick="showSection('dashboard')"><i class="fas fa-chart-pie"></i> Dashboard</a>
+      <a href="#" onclick="showSection('marks-entry')"><i class="fas fa-pen"></i> Marks Entry</a>
+      <a href="#" onclick="showSection('students')"><i class="fas fa-user-graduate"></i> Students</a>
+      <a href="#" onclick="showSection('teachers')"><i class="fas fa-chalkboard-teacher"></i> Teachers</a>
+      <a href="#" onclick="showSection('fees')"><i class="fas fa-money-bill-wave"></i> Fees</a>
+      <a href="#" onclick="showSection('attendance')"><i class="fas fa-calendar-check"></i> Attendance</a>
+      <a href="#" onclick="showSection('exams')"><i class="fas fa-file-alt"></i> Exams</a>
+      <a href="#" onclick="showSection('notices')"><i class="fas fa-bullhorn"></i> Notices</a>
+      <a href="#" onclick="showSection('backup')"><i class="fas fa-database"></i> Backup</a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="#" onclick="handleLogout()" style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;color:rgba(255,255,255,0.7);font-size:14px;text-decoration:none;">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main-content">
+    <!-- Top Bar -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="hamburger" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+        <h1 id="pageTitle">Dashboard</h1>
+      </div>
+      <div class="topbar-right">
+        <button onclick="toggleTheme()" style="background:none;border:none;color:var(--text);font-size:18px;cursor:pointer;padding:8px;">
+          <i class="fas fa-moon" id="themeIcon"></i>
+        </button>
+        <span id="adminName" style="font-weight:500;font-size:14px;">Admin</span>
+        <div class="user-avatar" id="adminAvatar">A</div>
+      </div>
+    </div>
+
+    <!-- ====== DASHBOARD SECTION ====== -->
+    <div class="dash-section active" id="sec-dashboard">
+      <div class="stats-grid" id="dashStats">
+        <div class="stat-card"><div class="stat-icon" style="background:rgba(26,86,219,0.1);color:var(--primary);"><i class="fas fa-user-graduate"></i></div><div class="stat-info"><h3 id="totalStudents">-</h3><p>Total Students</p></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:rgba(16,185,129,0.1);color:var(--success);"><i class="fas fa-chalkboard-teacher"></i></div><div class="stat-info"><h3 id="totalTeachers">-</h3><p>Teachers</p></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:rgba(245,158,11,0.1);color:var(--gold);"><i class="fas fa-users"></i></div><div class="stat-info"><h3 id="totalParents">-</h3><p>Parents</p></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:rgba(239,68,68,0.1);color:var(--danger);"><i class="fas fa-money-bill-wave"></i></div><div class="stat-info"><h3 id="pendingFees">-</h3><p>Pending Fees</p></div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+        <div class="table-container" style="padding:20px;">
+          <h3 style="margin-bottom:16px;font-size:16px;"><i class="fas fa-calendar" style="color:var(--primary);"></i> Today's Attendance</h3>
+          <div id="todayAttStats"></div>
+        </div>
+        <div class="table-container" style="padding:20px;">
+          <h3 style="margin-bottom:16px;font-size:16px;"><i class="fas fa-question-circle" style="color:var(--gold);"></i> Pending Doubts</h3>
+          <div id="pendingDoubtsStats">-</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== MARKS ENTRY SECTION (ONE SLIDE BULK ENTRY) ====== -->
+    <div class="dash-section" id="sec-marks-entry">
+      <div class="table-container" style="padding:24px;">
+        <h3 style="font-size:18px;margin-bottom:20px;"><i class="fas fa-pen" style="color:var(--primary);"></i> Bulk Marks Entry</h3>
+        <p style="font-size:14px;color:var(--text-secondary);margin-bottom:20px;">Select exam, class, subject and enter marks for ALL students on ONE page. Just type marks and click Save.</p>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Select Exam *</label>
+            <select id="marksExam" onchange="loadStudentsForMarks()">
+              <option value="">-- Select Exam --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Class *</label>
+            <select id="marksClass" onchange="loadStudentsForMarks()">
+              <option value="">-- Select Class --</option>
+              <option value="9">Class 9</option>
+              <option value="10">Class 10</option>
+              <option value="11">Class 11</option>
+              <option value="12">Class 12</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Section</label>
+            <select id="marksSection" onchange="loadStudentsForMarks()">
+              <option value="">All Sections</option>
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C">C</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Subject *</label>
+            <select id="marksSubject">
+              <option value="">-- Select Subject --</option>
+              <option value="Physics">Physics</option>
+              <option value="Chemistry">Chemistry</option>
+              <option value="Mathematics">Mathematics</option>
+              <option value="Biology">Biology</option>
+              <option value="English">English</option>
+              <option value="Accounts">Accounts</option>
+              <option value="Economics">Economics</option>
+              <option value="Business Studies">Business Studies</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Max Marks *</label>
+            <input type="number" id="marksMax" min="1" value="100">
+          </div>
+          <div class="form-group" style="display:flex;align-items:flex-end;gap:8px;">
+            <button class="btn btn-primary" onclick="loadStudentsForMarks()"><i class="fas fa-search"></i> Load Students</button>
+          </div>
+        </div>
+
+        <div id="marksTableContainer" style="display:none;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin:16px 0;">
+            <span id="studentCount" style="font-size:13px;color:var(--text-secondary);"></span>
+            <div>
+              <button class="btn btn-success" onclick="saveAllMarks()"><i class="fas fa-save"></i> Save All Marks</button>
+              <button class="btn btn-outline" onclick="clearAllMarks()" style="margin-left:8px;"><i class="fas fa-undo"></i> Clear</button>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th style="width:40px;">#</th>
+                <th>Roll No</th>
+                <th>Student ID</th>
+                <th>Student Name</th>
+                <th style="width:120px;">Marks Obtained</th>
+                <th style="width:100px;">Grade</th>
+                <th>Remarks</th>
+              </tr>
+            </thead>
+            <tbody id="marksTableBody">
+              <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-secondary);">Select exam, class, and subject then click "Load Students"</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== STUDENTS SECTION ====== -->
+    <div class="dash-section" id="sec-students">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <select id="studentFilterClass" onchange="loadStudents()" style="padding:8px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg-card);color:var(--text);font-size:13px;">
+            <option value="">All Classes</option>
+            <option value="9">Class 9</option><option value="10">Class 10</option>
+            <option value="11">Class 11</option><option value="12">Class 12</option>
+          </select>
+          <input type="text" id="studentSearch" placeholder="Search name or ID..." style="padding:8px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg-card);color:var(--text);font-size:13px;min-width:200px;" onkeyup="loadStudents()">
+        </div>
+        <button class="btn btn-primary" onclick="showAddStudentModal()"><i class="fas fa-plus"></i> Add Student</button>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead><tr><th>ID</th><th>Name</th><th>Class</th><th>Roll</th><th>Fee Status</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="studentsTableBody"><tr><td colspan="7" style="text-align:center;padding:24px;">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ====== FEES SECTION ====== -->
+    <div class="dash-section" id="sec-fees">
+      <div class="stats-grid" style="margin-bottom:16px;">
+        <div class="stat-card"><div class="stat-info"><h3 id="pendingFeesCount">-</h3><p>Pending</p></div></div>
+        <div class="stat-card"><div class="stat-info"><h3 id="overdueFeesCount">-</h3><p>Overdue</p></div></div>
+        <div class="stat-card"><div class="stat-info"><h3 id="totalFeesAmount">-</h3><p>Total Pending (₹)</p></div></div>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead><tr><th>Student</th><th>Amount</th><th>Due Date</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="feesTableBody"><tr><td colspan="5" style="text-align:center;padding:24px;">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Add Student Modal -->
+    <div id="addStudentModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100vh;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center;padding:20px;">
+      <div style="background:var(--bg-card);border-radius:var(--radius-lg);padding:32px;max-width:600px;width:100%;max-height:85vh;overflow-y:auto;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+          <h3 style="font-size:20px;">Add New Student</h3>
+          <button onclick="closeAddStudentModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-secondary);">&times;</button>
+        </div>
+        <form id="addStudentForm">
+          <div class="form-row">
+            <div class="form-group"><label>Full Name *</label><input type="text" id="sName" required></div>
+            <div class="form-group"><label>Email *</label><input type="email" id="sEmail" required></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Phone</label><input type="tel" id="sPhone"></div>
+            <div class="form-group"><label>Password *</label><input type="password" id="sPassword" required></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Class *</label><select id="sClass" required><option value="">Select</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option></select></div>
+            <div class="form-group"><label>Section</label><input type="text" id="sSection"></div>
+            <div class="form-group"><label>Roll Number</label><input type="number" id="sRoll"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Father Name</label><input type="text" id="sFather"></div>
+            <div class="form-group"><label>Mother Name</label><input type="text" id="sMother"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Father Phone</label><input type="tel" id="sFatherPhone"></div>
+            <div class="form-group"><label>Fee Amount (₹)</label><input type="number" id="sFeeAmount" value="0"></div>
+          </div>
+          <div style="display:flex;gap:12px;margin-top:16px;">
+            <button type="submit" class="btn btn-primary" style="flex:1;"><i class="fas fa-save"></i> Add Student</button>
+            <button type="button" class="btn btn-outline" onclick="closeAddStudentModal()">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== AUTH CHECK =====
+const token = localStorage.getItem('fusion_token');
+const user = JSON.parse(localStorage.getItem('fusion_user') || '{}');
+if (!token || user.role !== 'admin') { window.location.href = '/'; }
+
+// ===== TOAST =====
+function showToast(message, type = 'success') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'toast toast-' + type;
+  const icons = { success: 'check-circle', error: 'times-circle', info: 'info-circle' };
+  toast.innerHTML = '<i class="fas fa-' + (icons[type] || 'info-circle') + '"></i> ' + message;
+  container.appendChild(toast);
+  setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(100%)'; setTimeout(() => toast.remove(), 300); }, 3000);
+}
+
+// ===== SIDEBAR =====
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+
+// ===== SECTION SWITCHING =====
+function showSection(name) {
+  document.querySelectorAll('.dash-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+  document.getElementById('sec-' + name)?.classList.add('active');
+  document.querySelector(`.sidebar-nav a[onclick*="${name}"]`)?.classList.add('active');
+  document.getElementById('pageTitle').textContent = name.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  if (window.innerWidth <= 1024) document.getElementById('sidebar').classList.remove('open');
+  if (name === 'dashboard') loadDashboardStats();
+  if (name === 'marks-entry') loadExamsDropdown();
+  if (name === 'students') loadStudents();
+  if (name === 'fees') loadFees();
+}
+
+// ===== LOAD DASHBOARD STATS =====
+async function loadDashboardStats() {
+  try {
+    const res = await fetch('/api/admin/analytics', { headers: { 'Authorization': 'Bearer ' + token } });
+    const data = await res.json();
+    document.getElementById('totalStudents').textContent = data.totalStudents || 0;
+    document.getElementById('totalTeachers').textContent = data.totalTeachers || 0;
+    document.getElementById('totalParents').textContent = data.totalParents || 0;
+    document.getElementById('pendingFees').textContent = '₹' + (data.pendingFees?.total || 0).toLocaleString();
+  } catch (err) { showToast('Failed to load stats', 'error'); }
+}
+
+// ===== LOAD EXAMS (for marks dropdown) =====
+async function loadExamsDropdown() {
+  try {
+    const res = await fetch('/api/marks/exams', { headers: { 'Authorization': 'Bearer ' + token } });
+    const exams = await res.json();
+    const select = document.getElementById('marksExam');
+    select.innerHTML = '<option value="">-- Select Exam --</option>';
+    exams.forEach(e => { select.innerHTML += `<option value="${e.id}">${e.exam_name} (${e.exam_type})</option>`; });
+  } catch (err) { /* silent */ }
+}
+
+// ===== LOAD STUDENTS FOR MARKS (BULK ENTRY) =====
+async function loadStudentsForMarks() {
+  const examId = document.getElementById('marksExam').value;
+  const className = document.getElementById('marksClass').value;
+  const section = document.getElementById('marksSection').value;
+  if (!examId || !className) { showToast('Select exam and class', 'error'); return; }
+
+  try {
+    const res = await fetch(`/api/marks/students/${className}?section=${section}&exam_id=${examId}`, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    const students = await res.json();
+    const tbody = document.getElementById('marksTableBody');
+    const container = document.getElementById('marksTableContainer');
+
+    if (!students.length) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-secondary);">No students found for this class/section.</td></tr>';
+      container.style.display = 'none';
+      return;
+    }
+
+    container.style.display = 'block';
+    document.getElementById('studentCount').textContent = `Showing ${students.length} students`;
+
+    tbody.innerHTML = students.map((s, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${s.roll_number || '-'}</td>
+        <td style="font-size:12px;color:var(--text-secondary);">${s.student_id || ''}</td>
+        <td><strong>${s.full_name}</strong></td>
+        <td>
+          <input type="number" class="marks-input" id="mark-${s.id}" 
+                 value="${s.marks_obtained !== null ? s.marks_obtained : ''}" 
+                 min="0" max="${document.getElementById('marksMax').value}"
+                 oninput="autoGrade('${s.id}')" placeholder="Marks">
+          <input type="hidden" id="student-${s.id}" value="${s.id}">
+        </td>
+        <td><input type="text" class="marks-input" id="grade-${s.id}" value="${s.grade || ''}" placeholder="Grade" style="width:60px;"></td>
+        <td><input type="text" class="marks-input" id="remark-${s.id}" value="${s.remarks || ''}" placeholder="Remark" style="width:120px;"></td>
+      </tr>
+    `).join('');
+  } catch (err) {
+    showToast('Failed to load students', 'error');
+  }
+}
+
+// Auto-grade function
+function autoGrade(studentId) {
+  const marks = parseFloat(document.getElementById('mark-' + studentId).value);
+  const max = parseFloat(document.getElementById('marksMax').value) || 100;
+  const gradeEl = document.getElementById('grade-' + studentId);
+  if (!isNaN(marks) && max > 0) {
+    const pct = (marks / max) * 100;
+    if (pct >= 90) gradeEl.value = 'A+';
+    else if (pct >= 80) gradeEl.value = 'A';
+    else if (pct >= 70) gradeEl.value = 'B+';
+    else if (pct >= 60) gradeEl.value = 'B';
+    else if (pct >= 50) gradeEl.value = 'C';
+    else if (pct >= 33) gradeEl.value = 'D';
+    else gradeEl.value = 'F';
+  }
+}
+
+// ===== SAVE ALL MARKS (ONE CLICK!) =====
+async function saveAllMarks() {
+  const examId = document.getElementById('marksExam').value;
+  const subject = document.getElementById('marksSubject').value;
+  const maxMarks = parseFloat(document.getElementById('marksMax').value);
+  
+  if (!examId || !subject || !maxMarks) {
+    showToast('Select exam, subject, and max marks first', 'error');
+    return;
+  }
+
+  const rows = document.querySelectorAll('#marksTableBody tr');
+  const marksData = [];
+
+  rows.forEach(row => {
+    const input = row.querySelector('.marks-input');
+    if (!input) return;
+    const id = input.id.replace('mark-', '');
+    const marks = parseFloat(document.getElementById('mark-' + id)?.value);
+    if (!isNaN(marks)) {
+      marksData.push({
+        student_id: id,
+        marks_obtained: marks,
+        grade: document.getElementById('grade-' + id)?.value || '',
+        remarks: document.getElementById('remark-' + id)?.value || ''
+      });
+    }
+  });
+
+  if (!marksData.length) { showToast('No marks entered', 'error'); return; }
+
+  try {
+    const res = await fetch('/api/marks/bulk', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ exam_id: examId, subject, max_marks: maxMarks, marks_data: marksData })
+    });
+    const data = await res.json();
+    if (res.ok) { showToast(`✅ Marks saved for ${data.results?.length || marksData.length} students!`, 'success'); }
+    else { showToast(data.error || 'Failed to save', 'error'); }
+  } catch (err) { showToast('Server error', 'error'); }
+}
+
+function clearAllMarks() {
+  document.querySelectorAll('.marks-input').forEach(el => el.value = '');
+  showToast('Cleared', 'info');
+}
+
+// ===== LOAD STUDENTS TABLE =====
+async function loadStudents() {
+  try {
+    const cls = document.getElementById('studentFilterClass')?.value || '';
+    const search = document.getElementById('studentSearch')?.value || '';
+    const res = await fetch(`/api/admin/students?class=${cls}&search=${search}&limit=100`, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    const data = await res.json();
+    const tbody = document.getElementById('studentsTableBody');
+    if (!data.students?.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;">No students found</td></tr>'; return; }
+    tbody.innerHTML = data.students.map(s => `
+      <tr>
+        <td style="font-size:12px;color:var(--text-secondary);">${s.student_id}</td>
+        <td><strong>${s.full_name}</strong></td>
+        <td>${s.class}${s.section ? '-' + s.section : ''}</td>
+        <td>${s.roll_number || '-'}</td>
+        <td><span class="badge ${s.fee_status === 'paid' ? 'badge-success' : s.fee_status === 'overdue' ? 'badge-danger' : 'badge-warning'}">${s.fee_status || 'pending'}</span></td>
+        <td><span class="badge ${s.is_active ? 'badge-success' : 'badge-danger'}">${s.is_active ? 'Active' : 'Inactive'}</span></td>
+        <td>
+          <button class="btn btn-sm btn-outline" onclick="editStudent('${s.id}')"><i class="fas fa-edit"></i></button>
+          <button class="btn btn-sm ${s.is_active ? 'btn-danger' : 'btn-success'}" onclick="toggleStudent('${s.id}', ${!s.is_active})"><i class="fas ${s.is_active ? 'fa-ban' : 'fa-check'}"></i></button>
+        </td>
+      </tr>
+    `).join('');
+  } catch (err) { showToast('Failed to load students', 'error'); }
+}
+
+// ===== ADD STUDENT =====
+function showAddStudentModal() { document.getElementById('addStudentModal').style.display = 'flex'; }
+function closeAddStudentModal() { document.getElementById('addStudentModal').style.display = 'none'; }
+
+document.getElementById('addStudentForm')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = e.target.querySelector('button[type="submit"]');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+  
+  try {
+    const res = await fetch('/api/admin/students', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        full_name: document.getElementById('sName').value,
+        email: document.getElementById('sEmail').value,
+        phone: document.getElementById('sPhone').value,
+        password: document.getElementById('sPassword').value,
+        class: document.getElementById('sClass').value,
+        section: document.getElementById('sSection').value,
+        roll_number: parseInt(document.getElementById('sRoll').value) || 0,
+        father_name: document.getElementById('sFather').value,
+        mother_name: document.getElementById('sMother').value,
+        father_phone: document.getElementById('sFatherPhone').value,
+        fee_amount: parseFloat(document.getElementById('sFeeAmount').value) || 0
+      })
+    });
+    const data = await res.json();
+    if (res.ok) { showToast('✅ Student added! ID: ' + (data.student_code || ''), 'success'); closeAddStudentModal(); loadStudents(); }
+    else { showToast(data.error || 'Failed', 'error'); }
+  } catch (err) { showToast('Server error', 'error'); }
+  finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Add Student'; }
+});
+
+// ===== LOAD FEES =====
+  async function loadFees() {
+  try {
+    const res = await fetch('/api/fees', { headers: { 'Authorization': 'Bearer ' + token } });
+    const fees = await res.json();
+    const tbody = document.getElementById('feesTableBody');
+    const pending = fees.filter(f => f.status === 'pending');
+    const overdue = fees.filter(f => f.status === 'overdue');
+    
+    document.getElementById('pendingFeesCount').textContent = pending.length;
+    document.getElementById('overdueFeesCount').textContent = overdue.length;
+    document.getElementById('totalFeesAmount').textContent = '₹' + fees.reduce((s, f) => s + parseFloat(f.amount || 0), 0).toLocaleString();
+    
+    if (!fees.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;">No fees records</td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = fees.slice(0, 50).map(f => `
+      <tr>
+        <td><strong>${f.student_name || f.student_id}</strong><br><span style="font-size:12px;color:var(--text-secondary);">${f.class || ''} ${f.section || ''}</span></td>
+        <td>₹${parseFloat(f.amount).toLocaleString()}</td>
+        <td>${f.due_date ? new Date(f.due_date).toLocaleDateString() : '-'}</td>
+        <td><span class="badge ${f.status === 'paid' ? 'badge-success' : f.status === 'overdue' ? 'badge-danger' : 'badge-warning'}">${f.status}</span></td>
+        <td>${f.status !== 'paid' ? `<button class="btn btn-sm btn-success" onclick="markFeePaid('${f.id}')"><i class="fas fa-check"></i> Mark Paid</button>` : '-'}</td>
+      </tr>
+    `).join('');
+  } catch (err) { showToast('Failed to load fees', 'error'); }
+}
+
+async function markFeePaid(feeId) {
+  if (!confirm('Mark this fee as paid?')) return;
+  try {
+    const res = await fetch('/api/fees/pay', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fee_id: feeId, payment_method: 'manual', payment_reference: 'ADM-' + Date.now() })
+    });
+    if (res.ok) { showToast('✅ Fee marked as paid', 'success'); loadFees(); }
+    else { const d = await res.json(); showToast(d.error, 'error'); }
+  } catch (err) { showToast('Failed', 'error'); }
+}
+
+// ===== LOGOUT =====
+async function handleLogout() {
+  try { await fetch('/api/auth/logout', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token } }); } 
+  catch (e) { /* ignore */ }
+  localStorage.removeItem('fusion_token');
+  localStorage.removeItem('fusion_user');
+  window.location.href = '/';
+}
+
+// ===== THEME =====
+function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('fusion-theme', next);
+  document.getElementById('themeIcon').className = next === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+}
+const savedTheme = localStorage.getItem('fusion-theme') || 'light';
+document.documentElement.setAttribute('data-theme', savedTheme);
+document.getElementById('themeIcon').className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+
+// ===== INIT =====
+document.getElementById('adminName').textContent = user.name || 'Admin';
+loadDashboardStats();
+loadExamsDropdown();
+</script>
+</body>
+</html>
