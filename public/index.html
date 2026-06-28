@@ -1075,16 +1075,17 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <span>© 2026 Fusion Coaching. All rights reserved.</span>
+        <span>&copy; 2026 Fusion Coaching. All rights reserved.</span>
         <span><a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a> | <a href="#">Refund Policy</a></span>
       </div>
     </div>
   </footer>
 
+  <!-- ===== SCRIPTS: GLOBAL FUNCTIONS FIRST (SO onclick CAN FIND THEM) ===== -->
   <script>
-        // ===== LOGIN MODAL SYSTEM =====
+    // GLOBAL SCOPE functions — accessible from inline onclick="" handlers
     function openLoginModal(role) {
-      const modal = document.getElementById('loginModal');
+      var modal = document.getElementById('loginModal');
       if (modal) {
         modal.classList.add('active');
         switchLoginPanel(role);
@@ -1092,35 +1093,48 @@
       }
     }
     function closeLoginModal() {
-      const modal = document.getElementById('loginModal');
+      var modal = document.getElementById('loginModal');
       if (modal) {
         modal.classList.remove('active');
         document.body.style.overflow = '';
-        document.querySelectorAll('.login-error').forEach(el => { el.classList.remove('show'); el.textContent = ''; });
+        document.querySelectorAll('.login-error').forEach(function(el) { el.classList.remove('show'); el.textContent = ''; });
       }
     }
     function switchLoginPanel(role) {
-      document.querySelectorAll('.login-panel').forEach(p => p.classList.remove('active'));
-      document.querySelectorAll('.login-role-switch button').forEach(b => b.classList.remove('active'));
-      const panel = document.getElementById('loginPanel' + role.charAt(0).toUpperCase() + role.slice(1));
+      document.querySelectorAll('.login-panel').forEach(function(p) { p.classList.remove('active'); });
+      document.querySelectorAll('.login-role-switch button').forEach(function(b) { b.classList.remove('active'); });
+      var panel = document.getElementById('loginPanel' + role.charAt(0).toUpperCase() + role.slice(1));
       if (panel) panel.classList.add('active');
-      document.querySelectorAll('.login-role-switch button').forEach(b => {
+      document.querySelectorAll('.login-role-switch button').forEach(function(b) {
         if (b.textContent.trim().toLowerCase().includes(role)) b.classList.add('active');
       });
     }
     function togglePassword(inputId, el) {
-      const input = document.getElementById(inputId);
+      var input = document.getElementById(inputId);
       if (!input) return;
       if (input.type === 'password') { input.type = 'text'; el.innerHTML = '<i class="fas fa-eye-slash"></i>'; }
       else { input.type = 'password'; el.innerHTML = '<i class="fas fa-eye"></i>'; }
     }
+    function showForgotPassword(role) {
+      var email = prompt('Enter your registered email address:');
+      if (!email) return;
+      fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, role: role })
+      }).then(function(r) { return r.json(); }).then(function(data) {
+        alert(data.message || 'If an account exists, you will receive reset instructions.');
+      }).catch(function() {
+        alert('Failed to process request. Please try again later.');
+      });
+    }
     async function handleLogin(e, role) {
       e.preventDefault();
-      const email = document.getElementById(role + 'Email');
-      const password = document.getElementById(role + 'Password');
-      const rememberMe = document.getElementById(role + 'Remember');
-      const errorEl = document.getElementById(role + 'LoginError');
-      const btn = document.getElementById(role + 'LoginBtn');
+      var email = document.getElementById(role + 'Email');
+      var password = document.getElementById(role + 'Password');
+      var rememberMe = document.getElementById(role + 'Remember');
+      var errorEl = document.getElementById(role + 'LoginError');
+      var btn = document.getElementById(role + 'LoginBtn');
       
       if (!email || !password || !errorEl || !btn) return;
       
@@ -1135,7 +1149,7 @@
       errorEl.classList.remove('show');
 
       try {
-        const deviceInfo = {
+        var deviceInfo = {
           deviceId: localStorage.getItem('fusion_device_id') || 'device-' + Math.random().toString(36).substring(2, 10),
           userAgent: navigator.userAgent,
           platform: navigator.platform,
@@ -1145,20 +1159,20 @@
           localStorage.setItem('fusion_device_id', deviceInfo.deviceId);
         }
 
-        const response = await fetch('/api/auth/login', {
+        var response = await fetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
             email: email.value.trim(), 
             password: password.value, 
-            role, 
-            deviceInfo, 
+            role: role, 
+            deviceInfo: deviceInfo, 
             rememberMe: rememberMe ? rememberMe.checked : false 
           }),
           credentials: 'include'
         });
 
-        const data = await response.json();
+        var data = await response.json();
 
         if (!response.ok) {
           throw new Error(data.error || 'Login failed. Please try again.');
@@ -1177,27 +1191,17 @@
         btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> <span>Sign In</span>';
       }
     }
-    function showForgotPassword(role) {
-      const email = prompt('Enter your registered email address:');
-      if (!email) return;
-      fetch('/api/auth/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, role })
-      }).then(r => r.json()).then(data => {
-        alert(data.message || 'If an account exists, you will receive reset instructions.');
-      }).catch(() => {
-        alert('Failed to process request. Please try again later.');
-      });
+    function closeMobileMenu() {
+      var toggle = document.getElementById('navToggle');
+      var menu = document.getElementById('mobileMenu');
+      if(toggle && menu) {
+        toggle.classList.remove('active');
+        menu.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+      }
     }
-    document.addEventListener('click', function(e) {
-      const modal = document.getElementById('loginModal');
-      if (modal && e.target === modal) closeLoginModal();
-    });
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') closeLoginModal();
-    });
   </script>
+
   <script>
     (function() {
       'use strict';
@@ -1210,26 +1214,25 @@
       });
 
       // ===== THEME TOGGLE (DEFAULTS TO LIGHT) =====
-      const themeToggleTopbar = document.getElementById('themeToggleTopbar');
-      const themeIconTopbar = document.getElementById('themeIconTopbar');
-      const themeToggleMobile = document.getElementById('themeToggleMobile');
-      const themeIconMobile = document.getElementById('themeIconMobile');
+      var themeToggleTopbar = document.getElementById('themeToggleTopbar');
+      var themeIconTopbar = document.getElementById('themeIconTopbar');
+      var themeToggleMobile = document.getElementById('themeToggleMobile');
+      var themeIconMobile = document.getElementById('themeIconMobile');
 
       function setTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
         localStorage.setItem('fusion-theme', theme);
         
-        const isDark = theme === 'dark';
+        var isDark = theme === 'dark';
         if(themeIconTopbar) themeIconTopbar.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
         if(themeIconMobile) themeIconMobile.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
       }
 
-      // Explicit light-first registration strategy
-      const savedTheme = localStorage.getItem('fusion-theme') || 'light';
+      var savedTheme = localStorage.getItem('fusion-theme') || 'light';
       setTheme(savedTheme);
 
       function toggleThemeHandler() {
-        const current = document.documentElement.getAttribute('data-theme');
+        var current = document.documentElement.getAttribute('data-theme');
         setTheme(current === 'dark' ? 'light' : 'dark');
       }
 
@@ -1237,25 +1240,17 @@
       if(themeToggleMobile) themeToggleMobile.addEventListener('click', toggleThemeHandler);
 
       // ===== MOBILE MENU =====
-      const navToggle = document.getElementById('navToggle');
-      const mobileMenu = document.getElementById('mobileMenu');
+      var navToggle = document.getElementById('navToggle');
+      var mobileMenu = document.getElementById('mobileMenu');
 
       if(navToggle && mobileMenu) {
         navToggle.addEventListener('click', function() {
           navToggle.classList.toggle('active');
           mobileMenu.classList.toggle('open');
-          const expanded = navToggle.getAttribute('aria-expanded') === 'true' ? 'false' : 'true';
+          var expanded = navToggle.getAttribute('aria-expanded') === 'true' ? 'false' : 'true';
           navToggle.setAttribute('aria-expanded', expanded);
         });
       }
-
-      window.closeMobileMenu = function() {
-        if(navToggle && mobileMenu) {
-          navToggle.classList.remove('active');
-          mobileMenu.classList.remove('open');
-          navToggle.setAttribute('aria-expanded', 'false');
-        }
-      };
 
       if(mobileMenu) {
         mobileMenu.querySelectorAll('a').forEach(function(link) {
@@ -1264,9 +1259,9 @@
       }
 
       // ===== STICKY NAV + ACTIVE LINK =====
-      const navbar = document.getElementById('navbar');
-      const sections = document.querySelectorAll('section[id]');
-      const navLinks = document.querySelectorAll('#navLinks a:not(.btn)');
+      var navbar = document.getElementById('navbar');
+      var sections = document.querySelectorAll('section[id]');
+      var navLinks = document.querySelectorAll('#navLinks a:not(.btn)');
 
       function updateNav() {
         if (!navbar) return;
@@ -1276,10 +1271,10 @@
           navbar.classList.remove('scrolled');
         }
 
-        let current = '';
+        var current = '';
         sections.forEach(function(section) {
-          const top = section.offsetTop - 220;
-          const bottom = top + section.offsetHeight;
+          var top = section.offsetTop - 220;
+          var bottom = top + section.offsetHeight;
           if (window.scrollY >= top && window.scrollY < bottom) {
             current = section.getAttribute('id');
           }
@@ -1297,7 +1292,7 @@
       window.addEventListener('resize', updateNav, { passive: true });
 
       // ===== SCROLL TO TOP =====
-      const scrollTopBtn = document.getElementById('scrollTop');
+      var scrollTopBtn = document.getElementById('scrollTop');
 
       window.addEventListener('scroll', function() {
         if (!scrollTopBtn) return;
@@ -1315,15 +1310,15 @@
       }
 
       // ===== COUNTER ANIMATION =====
-      const counters = document.querySelectorAll('.counter');
+      var counters = document.querySelectorAll('.counter');
 
       function animateCounters() {
         counters.forEach(function(counter) {
-          const target = parseInt(counter.getAttribute('data-target'));
-          const current = parseInt(counter.textContent);
+          var target = parseInt(counter.getAttribute('data-target'));
+          var current = parseInt(counter.textContent);
           if (current < target) {
-            const increment = Math.ceil(target / 40);
-            const next = Math.min(current + increment, target);
+            var increment = Math.ceil(target / 40);
+            var next = Math.min(current + increment, target);
             counter.textContent = next;
             setTimeout(animateCounters, 30);
           } else {
@@ -1334,12 +1329,12 @@
       setTimeout(animateCounters, 600);
 
       // ===== SCROLL REVEAL =====
-      const revealElements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right');
+      var revealElements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right');
 
       function checkReveal() {
         revealElements.forEach(function(el) {
-          const rect = el.getBoundingClientRect();
-          const winHeight = window.innerHeight;
+          var rect = el.getBoundingClientRect();
+          var winHeight = window.innerHeight;
           if (rect.top < winHeight - 40) {
             el.classList.add('visible');
           }
@@ -1351,17 +1346,17 @@
       checkReveal();
 
       // ===== TESTIMONIALS CAROUSEL =====
-      const track = document.getElementById('testimonialTrack');
+      var track = document.getElementById('testimonialTrack');
       if (track) {
-        const slides = track.querySelectorAll('.testimonial-slide');
-        const dotsContainer = document.getElementById('carouselDots');
-        const prevBtn = document.getElementById('prevTestimonial');
-        const nextBtn = document.getElementById('nextTestimonial');
-        let currentSlide = 0;
-        let autoSlideInterval;
+        var slides = track.querySelectorAll('.testimonial-slide');
+        var dotsContainer = document.getElementById('carouselDots');
+        var prevBtn = document.getElementById('prevTestimonial');
+        var nextBtn = document.getElementById('nextTestimonial');
+        var currentSlide = 0;
+        var autoSlideInterval;
 
         slides.forEach(function(_, i) {
-          const dot = document.createElement('div');
+          var dot = document.createElement('div');
           dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
           dot.addEventListener('click', function() { goToSlide(i); });
           if(dotsContainer) dotsContainer.appendChild(dot);
@@ -1369,7 +1364,7 @@
 
         function goToSlide(index) {
           currentSlide = index;
-          const offset = -currentSlide * 100;
+          var offset = -currentSlide * 100;
           track.style.transform = 'translateX(' + offset + '%)';
           if(dotsContainer) {
             dotsContainer.querySelectorAll('.carousel-dot').forEach(function(dot, i) {
@@ -1401,11 +1396,11 @@
       }
 
       // ===== FAQ ACCORDION =====
-      const faqItems = document.querySelectorAll('.faq-item');
+      var faqItems = document.querySelectorAll('.faq-item');
       faqItems.forEach(function(item) {
-        const question = item.querySelector('.faq-question');
+        var question = item.querySelector('.faq-question');
         question.addEventListener('click', function() {
-          const isOpen = item.classList.contains('open');
+          var isOpen = item.classList.contains('open');
           faqItems.forEach(function(f) { f.classList.remove('open'); });
           if (!isOpen) {
             item.classList.add('open');
@@ -1414,15 +1409,15 @@
       });
 
       // ===== CONTACT FORM VALIDATION =====
-      const contactForm = document.getElementById('contactForm');
-      const formSuccess = document.getElementById('formSuccess');
+      var contactForm = document.getElementById('contactForm');
+      var formSuccess = document.getElementById('formSuccess');
 
       if(contactForm) {
         contactForm.addEventListener('submit', function(e) {
           e.preventDefault();
-          let valid = true;
+          var valid = true;
 
-          const fields = [
+          var fields = [
             { id: 'name', pattern: null },
             { id: 'email', pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ },
             { id: 'phone', pattern: /^[0-9]{10,}$/ },
@@ -1430,10 +1425,10 @@
           ];
 
           fields.forEach(function(field) {
-            const input = document.getElementById(field.id);
+            var input = document.getElementById(field.id);
             if(!input) return;
-            const group = input.closest('.form-group');
-            let isValid = true;
+            var group = input.closest('.form-group');
+            var isValid = true;
 
             if (field.pattern) {
               isValid = field.pattern.test(input.value.trim());
@@ -1465,15 +1460,15 @@
         });
       }
 
-      // ===== PREMIUM ACADEMIC BACKGROUND ANIMATION =====
-      const particlesContainer = document.getElementById('particles');
+      // ===== PARTICLES =====
+      var particlesContainer = document.getElementById('particles');
       function createParticles() {
         if (!particlesContainer) return;
-        const symbols = ['🎓', '📚', '📐', '✏️', '🔬', 'π', '∑', '√', 'Ω', '💡', '⚛️'];
-        const count = Math.min(25, Math.floor(window.innerWidth / 45));
+        var symbols = ['🎓', '📚', '📐', '✏️', '🔬', 'π', '∑', '√', 'Ω', '💡', '⚛️'];
+        var count = Math.min(25, Math.floor(window.innerWidth / 45));
         
-        for (let i = 0; i < count; i++) {
-          const particle = document.createElement('div');
+        for (var i = 0; i < count; i++) {
+          var particle = document.createElement('div');
           particle.className = 'particle';
           particle.textContent = symbols[Math.floor(Math.random() * symbols.length)];
           particle.style.left = Math.random() * 100 + '%';
@@ -1489,10 +1484,10 @@
       // ===== RIPPLE EFFECT =====
       document.querySelectorAll('.ripple').forEach(function(btn) {
         btn.addEventListener('click', function(e) {
-          const rect = btn.getBoundingClientRect();
-          const ripple = document.createElement('span');
+          var rect = btn.getBoundingClientRect();
+          var ripple = document.createElement('span');
           ripple.className = 'ripple-effect';
-          const size = Math.max(rect.width, rect.height);
+          var size = Math.max(rect.width, rect.height);
           ripple.style.width = ripple.style.height = size + 'px';
           ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
           ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
@@ -1504,13 +1499,13 @@
       // ===== SMOOTH SCROLL FOR ALL ANCHOR LINKS =====
       document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
         anchor.addEventListener('click', function(e) {
-          const href = anchor.getAttribute('href');
+          var href = anchor.getAttribute('href');
           if (href === '#') return;
-          const target = document.querySelector(href);
+          var target = document.querySelector(href);
           if (target) {
             e.preventDefault();
-            const offset = 72;
-            const top = target.getBoundingClientRect().top + window.scrollY - offset;
+            var offset = 72;
+            var top = target.getBoundingClientRect().top + window.scrollY - offset;
             window.scrollTo({ top: top, behavior: 'smooth' });
           }
         });
@@ -1521,14 +1516,23 @@
           closeMobileMenu();
         }
       });
+
+      // Close login modal on overlay click and escape
+      document.addEventListener('click', function(e) {
+        var modal = document.getElementById('loginModal');
+        if (modal && e.target === modal) closeLoginModal();
+      });
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeLoginModal();
+      });
     })();
   </script>
-  
+
   <script>
     (function() {
-      const words = [
+      var words = [
           "Science Education",
-          "physics Education",
+          "Physics Education",
           "JEE Aspirants",
           "NEET Aspirants",
           "Board Toppers",
@@ -1537,19 +1541,19 @@
           "Future Leaders"
       ];
 
-      let wordIndex = 0;
-      let charIndex = 0;
-      let isDeleting = false;
-      const textElement = document.getElementById("changing-text");
+      var wordIndex = 0;
+      var charIndex = 0;
+      var isDeleting = false;
+      var textElement = document.getElementById("changing-text");
       
-      const typeSpeed = 100;
-      const eraseSpeed = 50;
-      const delayBetweenWords = 2000; 
+      var typeSpeed = 100;
+      var eraseSpeed = 50;
+      var delayBetweenWords = 2000;
 
       function typeEffect() {
         if (!textElement) return;
 
-        const currentWord = words[wordIndex];
+        var currentWord = words[wordIndex];
         
         if (isDeleting) {
           textElement.textContent = currentWord.substring(0, charIndex - 1);
@@ -1559,7 +1563,7 @@
           charIndex++;
         }
 
-        let nextActionTimeout = isDeleting ? eraseSpeed : typeSpeed;
+        var nextActionTimeout = isDeleting ? eraseSpeed : typeSpeed;
 
         if (!isDeleting && charIndex === currentWord.length) {
           nextActionTimeout = delayBetweenWords;
@@ -1567,18 +1571,17 @@
         } else if (isDeleting && charIndex === 0) {
           isDeleting = false;
           wordIndex = (wordIndex + 1) % words.length;
-          nextActionTimeout = 500; 
+          nextActionTimeout = 500;
         }
 
         setTimeout(typeEffect, nextActionTimeout);
       }
 
-      window.addEventListener('DOMContentLoaded', () => {
+      window.addEventListener('DOMContentLoaded', function() {
         setTimeout(typeEffect, 1000);
       });
     })();
   </script>
-  <script>
 
 </body>
-</html>
+  </html>
